@@ -1340,7 +1340,7 @@ function formatTime(ms) {
 function getBribeCost() { return Math.max(100, state.totalEarned * 0.001) * (1 + state.heat / 20); }
 function getOmertaMultiplier() { return 1 + state.omertaPoints * 0.5; }
 function getPrestigeGain() {
-  const base = Math.floor(Math.sqrt(state.totalEarned / 1e10));
+  const base = Math.floor(Math.sqrt(state.totalEarned / 1e6));
   return getCurrentRankIndex() >= 3 ? Math.max(1, base) : base;
 }
 
@@ -1887,7 +1887,7 @@ function prestige() {
   if (!confirm(`Go to the mattresses? You'll lose all cash and rackets but gain ${gain} Omert\u00e0 Points.`)) return;
   state.omertaPoints += gain;
   state.prestiges++;
-  const saved = { omertaPoints: state.omertaPoints, prestiges: state.prestiges, lifetimeEarned: state.lifetimeEarned, timesRaided: state.timesRaided, eventsCompleted: state.eventsCompleted, crewOwned: [...state.crewOwned] };
+  const saved = { omertaPoints: state.omertaPoints, prestiges: state.prestiges, lifetimeEarned: state.lifetimeEarned, timesRaided: state.timesRaided, eventsCompleted: state.eventsCompleted };
   Object.assign(state, getDefaultState());
   Object.assign(state, saved);
   notify(`Reborn with ${state.omertaPoints} Omert\u00e0 Points (x${getOmertaMultiplier().toFixed(2)} income)`);
