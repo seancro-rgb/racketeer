@@ -1287,9 +1287,9 @@ function switchTab(name) {
   document.getElementById('navbtn-' + name).classList.add('active');
 }
 
-function openUpgrades(racketId) {
-  const def = RACKETS.find(r => r.id === racketId);
-  document.getElementById('upgrades-title').textContent = def.name + ' Upgrades';
+let _currentUpgradeRacket = null;
+
+function renderUpgradesList(racketId) {
   const list = document.getElementById('upgrades-list');
   const ups = UPGRADES[racketId] || [];
   list.innerHTML = ups.map(u => {
@@ -1303,6 +1303,13 @@ function openUpgrades(racketId) {
         : `<button class="upgrade-buy-btn" onclick="buyUpgrade('${u.id}','${racketId}')" ${state.cash < u.cost ? 'disabled' : ''}>${formatMoney(u.cost)}</button>`}
     </div>`;
   }).join('');
+}
+
+function openUpgrades(racketId) {
+  const def = RACKETS.find(r => r.id === racketId);
+  document.getElementById('upgrades-title').textContent = def.name + ' Upgrades';
+  _currentUpgradeRacket = racketId;
+  renderUpgradesList(racketId);
   openSheet('upgrades');
 }
 
@@ -1469,6 +1476,32 @@ function updateUI() {
     const milestones = card.querySelectorAll('.milestone');
     MILESTONES.forEach((m, mi) => { if (milestones[mi]) milestones[mi].classList.toggle('achieved', rs.level >= m.level); });
   });
+
+  // Update upgrade buttons if sheet is open
+  if (currentSheet === 'upgrades' && _currentUpgradeRacket) {
+    document.querySelectorAll('.upgrade-buy-btn').forEach(btn => {
+      const ups = UPGRADES[_currentUpgradeRacket] || [];
+      const u = ups.find(x => btn.onclick && btn.textContent.trim() === formatMoney(x.cost));
+      // Simpler: just re-enable/disable all non-owned upgrade buttons based on cash
+      const costText = btn.textContent.trim();
+      for (const uu of ups) {
+        if (formatMoney(uu.cost) === costText && !state.upgradesPurchased.includes(uu.id)) {
+          btn.disabled = state.cash < uu.cost;
+          break;
+        }
+      }
+    });
+  }
+
+  // Update crew buttons if sheet is open
+  if (currentSheet === 'crew') {
+    document.querySelectorAll('.crew-assign-btn:not(.active)').forEach(btn => {
+      const cm = CREW_MEMBERS.find(c => btn.textContent.includes(formatMoney(c.cost)));
+      if (cm && !state.crewOwned.includes(cm.id)) {
+        btn.disabled = state.cash < cm.cost;
+      }
+    });
+  }
 }
 
 // ==================== GAME ACTIONS ====================
@@ -1618,26 +1651,31 @@ function triggerRaid() {
 
 // ==================== RANDOM EVENTS ====================
 
+let _currentEvent = null;
+
 function triggerEvent() {
   const evt = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  _currentEvent = evt;
   const overlay = document.createElement('div');
   overlay.className = 'event-overlay';
+  overlay.id = 'active-event';
 
   const choicesHtml = evt.choices.map((c, ci) => {
     const cost = Math.max(c.minCost, state.totalEarned * c.costPct);
     const canAfford = state.cash >= cost || cost === 0;
-    return `<button class="event-choice-btn" onclick="resolveEvent(${ci}, this.parentNode.parentNode.parentNode)" ${!canAfford ? 'disabled' : ''}>
-      ${c.text}<span class="event-choice-cost">${cost > 0 ? 'Cost: ' + formatMoney(cost) + ' — ' : ''}${c.rewardDesc}</span>
+    return `<button class="event-choice-btn" onclick="resolveEvent(${ci})" ${!canAfford ? 'disabled' : ''}>
+      ${c.text}<span class="event-choice-cost">${cost > 0 ? 'Cost: ' + formatMoney(cost) + ' \u2014 ' : ''}${c.rewardDesc}</span>
     </button>`;
   }).join('');
 
-  overlay.innerHTML = `<div class="event-card"><div class="event-title">${evt.title}</div><div class="event-desc">${evt.desc}</div><div class="event-choices" data-event='${JSON.stringify(evt)}'>${choicesHtml}</div></div>`;
+  overlay.innerHTML = `<div class="event-card"><div class="event-title">${evt.title}</div><div class="event-desc">${evt.desc}</div><div class="event-choices">${choicesHtml}</div></div>`;
   document.body.appendChild(overlay);
 }
 
-function resolveEvent(choiceIndex, overlayEl) {
-  const evtData = JSON.parse(overlayEl.querySelector('[data-event]').dataset.event);
-  const choice = evtData.choices[choiceIndex];
+function resolveEvent(choiceIndex) {
+  const evt = _currentEvent;
+  if (!evt) return;
+  const choice = evt.choices[choiceIndex];
   const cost = Math.max(choice.minCost, state.totalEarned * choice.costPct);
 
   if (cost > 0 && state.cash < cost) return;
@@ -1659,8 +1697,12 @@ function resolveEvent(choiceIndex, overlayEl) {
     notify(`Revenue boosted by ${Math.round((choice.rewardMult - 1) * 100)}% for ${choice.rewardDur / 1000}s!`);
   }
 
-  overlayEl.style.animation = 'bribe-fade-out 0.3s forwards';
-  setTimeout(() => overlayEl.remove(), 300);
+  _currentEvent = null;
+  const overlayEl = document.getElementById('active-event');
+  if (overlayEl) {
+    overlayEl.style.animation = 'bribe-fade-out 0.3s forwards';
+    setTimeout(() => overlayEl.remove(), 300);
+  }
 }
 
 // ==================== OFFLINE EARNINGS ====================
