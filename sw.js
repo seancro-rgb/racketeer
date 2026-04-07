@@ -1,14 +1,15 @@
-const CACHE_NAME = 'racketeer-v2';
+const CACHE_NAME = 'racketeer-v3';
+const BASE = '/racketeer/';
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
       cache.addAll([
-        './',
-        './index.html',
-        './manifest.json',
-        './icon-192.png',
-        './icon-512.png'
+        BASE,
+        BASE + 'index.html',
+        BASE + 'manifest.json',
+        BASE + 'icon-192.png',
+        BASE + 'icon-512.png'
       ])
     )
   );
