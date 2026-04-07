@@ -306,7 +306,8 @@
     transition: border-color 0.2s;
   }
 
-  .racket-card.locked { opacity: 0.35; pointer-events: none; }
+  .racket-card.locked { opacity: 0.2; pointer-events: none; }
+  .racket-card.revealed { opacity: 0.55; }
 
   .racket-card.raid {
     border-color: var(--red) !important;
@@ -982,7 +983,6 @@
     <div class="stat-row"><span class="stat-label">Prestiges</span><span class="stat-value" id="stat-prestiges">0</span></div>
     <div class="stat-row"><span class="stat-label">Events Completed</span><span class="stat-value" id="stat-events">0</span></div>
     <div id="save-controls">
-      <button onclick="saveGame()">Save</button>
       <button onclick="if(confirm('Reset all progress?')){resetGame()}">Reset</button>
     </div>
   </div>
@@ -1293,7 +1293,7 @@ function getTime(racketDef, level) {
   const { speed: mSpd } = getMilestoneMultipliers(level);
   const uMult = getUpgradeMultipliers(racketDef.id);
   const cMult = getCrewBonuses(racketDef.id);
-  return racketDef.baseTime * Math.pow(0.995, Math.max(0, level - 1)) / (mSpd * uMult.spd * cMult.spd);
+  return racketDef.baseTime / (mSpd * uMult.spd * cMult.spd);
 }
 
 function getHeatPerRun(racketDef) {
@@ -1472,8 +1472,9 @@ function renderRackets() {
     const spdLabel = mSpd > 1 ? '\u{26A1}x' + mSpd : '';
     const canBuy = isFreeFirst || (unlocked && state.cash >= bulkCost && buyCount > 0);
 
+    const revealed = unlocked && rs.level === 0;
     const card = document.createElement('div');
-    card.className = 'racket-card' + (!unlocked ? ' locked' : '') + (rs.raided ? ' raid' : '');
+    card.className = 'racket-card' + (!unlocked ? ' locked' : '') + (revealed ? ' revealed' : '') + (rs.raided ? ' raid' : '');
     card.innerHTML = `
       <div class="racket-icon-wrap">
         <div class="racket-icon ${iconClass}" onclick="runRacket(${i})">${def.icon}</div>
@@ -1654,6 +1655,7 @@ function updateUI() {
     const card = document.querySelectorAll('.racket-card')[i];
     if (!card) return;
     card.classList.toggle('locked', !unlocked);
+    card.classList.toggle('revealed', unlocked && rs.level === 0);
     card.classList.toggle('raid', rs.raided);
 
     const icon = card.querySelector('.racket-icon');
@@ -1773,6 +1775,7 @@ function buyRacket(index) {
 
   if (count === 1 && rs.level === 1) notify(`Acquired: ${def.name}`);
   renderRackets();
+  updateUI();
 }
 
 function runRacket(index) {
@@ -2038,12 +2041,11 @@ setInterval(rotateNews, 12000);
 
 function saveGame() {
   state.lastSaveTime = Date.now();
-  localStorage.setItem('mademan_save', JSON.stringify(state));
-  notify('Game saved.');
+  localStorage.setItem('racketeer_save', JSON.stringify(state));
 }
 
 function loadGame() {
-  const data = localStorage.getItem('mademan_save');
+  const data = localStorage.getItem('racketeer_save');
   if (!data) return false;
   try {
     const loaded = JSON.parse(data);
@@ -2076,7 +2078,7 @@ function loadGame() {
 }
 
 function resetGame() {
-  localStorage.removeItem('mademan_save');
+  localStorage.removeItem('racketeer_save');
   state = getDefaultState();
   renderRackets();
   renderRankList();
@@ -2085,8 +2087,8 @@ function resetGame() {
 
 setInterval(() => {
   state.lastSaveTime = Date.now();
-  localStorage.setItem('mademan_save', JSON.stringify(state));
-}, 30000);
+  localStorage.setItem('racketeer_save', JSON.stringify(state));
+}, 15000);
 
 // ==================== INIT ====================
 
