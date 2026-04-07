@@ -1091,53 +1091,114 @@ RACKETS.forEach(r => {
 });
 
 // Random events
+// Events use dynamic cost/reward functions resolved at trigger time
+// Each choice has a resolve() function called on selection
 const EVENTS = [
   {
-    title: 'The Cousin\'s Bail',
-    desc: 'Your cousin Vinny got picked up on a minor charge. Help him out?',
-    choices: [
-      { text: 'Pay his bail', costPct: 0.01, minCost: 500, reward: 'revenue', rewardMult: 1.1, rewardDur: 60000, rewardDesc: '+10% revenue for 60s' },
-      { text: 'Let him sit', costPct: 0, minCost: 0, reward: 'none', rewardDesc: 'No effect' },
-    ]
+    title: 'The Shakedown',
+    desc: 'A local business owner is behind on payments. Time to collect.',
+    choices: () => {
+      const dps = getCurrentDPS();
+      const bigPayout = dps * 60 * 0.1;
+      return [
+        { text: 'Demand double', desc: `50% chance: ${formatMoney(bigPayout)} bonus. 50% chance: +15 heat`, cost: 0,
+          resolve: () => { if (Math.random() < 0.5) { addCash(bigPayout); notify(`Intimidation works! Earned ${formatMoney(bigPayout)}`); } else { state.heat = Math.min(100, state.heat + 15); notify('He called the cops! +15 heat', true); } }},
+        { text: 'Play it cool', desc: `Guaranteed ${formatMoney(bigPayout * 0.2)}`, cost: 0,
+          resolve: () => { addCash(bigPayout * 0.2); notify(`Collected ${formatMoney(bigPayout * 0.2)} smoothly`); }},
+      ];
+    }
   },
   {
-    title: 'A Rival\'s Offer',
-    desc: 'A rival family wants to sell you information about police patrol schedules.',
-    choices: [
-      { text: 'Buy the info', costPct: 0.02, minCost: 1000, reward: 'heat', rewardAmt: -20, rewardDesc: '-20 heat' },
-      { text: 'It\'s a trap — refuse', costPct: 0, minCost: 0, reward: 'none', rewardDesc: 'Play it safe' },
-    ]
+    title: 'Rat in the Crew',
+    desc: 'Word on the street is someone\'s been talking to the Feds.',
+    choices: () => {
+      const bribeCost = getBribeCost();
+      return [
+        { text: 'Interrogate him', desc: `Cost: ${formatMoney(bribeCost)}. 70%: -30% heat. 30%: +25 heat instead`, cost: bribeCost,
+          resolve: () => { if (Math.random() < 0.7) { state.heat = Math.max(0, state.heat * 0.7); notify('Rat dealt with. Heat reduced by 30%'); } else { state.heat = Math.min(100, state.heat + 25); notify('He was a plant! The Feds got more info. +25 heat', true); } }},
+        { text: 'Whack him quietly', desc: '-10% heat, guaranteed', cost: 0,
+          resolve: () => { state.heat = Math.max(0, state.heat * 0.9); notify('Problem solved quietly. Heat reduced by 10%'); }},
+      ];
+    }
   },
   {
-    title: 'Lucky Break',
-    desc: 'One of your guys found an unguarded shipment at the docks.',
-    choices: [
-      { text: 'Grab it all', costPct: 0, minCost: 0, reward: 'cash', rewardPct: 0.05, rewardDesc: 'Bonus cash payout' },
-    ]
+    title: 'Rival Turf War',
+    desc: 'The Moretti family is moving in on your territory.',
+    choices: () => {
+      const bigCash = state.totalEarned * 0.15;
+      const safeCash = state.totalEarned * 0.03;
+      return [
+        { text: 'Go to war', desc: `60%: ${formatMoney(bigCash)} payout. 40%: a racket gets raided`, cost: 0,
+          resolve: () => { if (Math.random() < 0.6) { addCash(bigCash); notify(`Victory! Earned ${formatMoney(bigCash)}`); } else { triggerRaid(); notify('They hit back hard!', true); } }},
+        { text: 'Negotiate peace', desc: `Guaranteed ${formatMoney(safeCash)}`, cost: 0,
+          resolve: () => { addCash(safeCash); notify(`Peace agreed. Earned ${formatMoney(safeCash)}`); }},
+      ];
+    }
   },
   {
-    title: 'Protection Dispute',
-    desc: 'Two shop owners are fighting over territory. Settle it for a fee?',
-    choices: [
-      { text: 'Mediate for a price', costPct: 0.005, minCost: 200, reward: 'revenue', rewardMult: 1.15, rewardDur: 45000, rewardDesc: '+15% revenue for 45s' },
-      { text: 'Let them sort it out', costPct: 0, minCost: 0, reward: 'none', rewardDesc: 'No effect' },
-    ]
+    title: 'Crooked Cop',
+    desc: 'A police captain approaches you. He wants a big payday in exchange for looking the other way.',
+    choices: () => {
+      const cost = getBribeCost() * 2;
+      return [
+        { text: 'Put him on payroll', desc: `Cost: ${formatMoney(cost)}. No raids for 60s + heat frozen`, cost: cost,
+          resolve: () => { state.raidImmunityEnd = Date.now() + 60000; notify('Captain on payroll. No raids for 60 seconds!'); }},
+        { text: 'Decline', desc: 'No effect', cost: 0,
+          resolve: () => { notify('You wave him off.'); }},
+      ];
+    }
   },
   {
-    title: 'Crooked Accountant',
-    desc: 'An accountant offers to cook your books — less heat, but it\'ll cost ya.',
-    choices: [
-      { text: 'Hire him', costPct: 0.03, minCost: 2000, reward: 'heat', rewardAmt: -35, rewardDesc: '-35 heat' },
-      { text: 'Too risky', costPct: 0, minCost: 0, reward: 'none', rewardDesc: 'No effect' },
-    ]
+    title: 'Big Score Tip',
+    desc: 'A contact has intel on a high-value target. Big risk, big reward.',
+    choices: () => {
+      const stake = state.cash * 0.05;
+      return [
+        { text: 'Go all in', desc: `Cost: ${formatMoney(stake)}. 50%: earn ${formatMoney(stake * 4)} back. 50%: lose it + raid`, cost: stake,
+          resolve: () => { if (Math.random() < 0.5) { addCash(stake * 4); notify(`Jackpot! Earned ${formatMoney(stake * 4)}`); } else { triggerRaid(); notify('It was a setup! Lost the investment and got raided', true); } }},
+        { text: 'Pass', desc: 'No effect', cost: 0,
+          resolve: () => { notify('You let it go.'); }},
+      ];
+    }
   },
   {
-    title: 'Street Race',
-    desc: 'A high-stakes street race. Your wheelman is confident.',
-    choices: [
-      { text: 'Bet big', costPct: 0.02, minCost: 500, reward: 'cash', rewardPct: 0.06, rewardDesc: 'Win big cash if lucky' },
-      { text: 'Too flashy', costPct: 0, minCost: 0, reward: 'none', rewardDesc: 'No effect' },
-    ]
+    title: 'Family Favour',
+    desc: 'The Boss needs a favour. Helping out would be good for your reputation.',
+    choices: () => {
+      const cost = state.cash * 0.03;
+      return [
+        { text: 'Help the family', desc: `Cost: ${formatMoney(cost)}. All revenue x1.25 for 90s`, cost: cost,
+          resolve: () => { state.revenueBoostMult = 1.25; state.revenueBoostEnd = Date.now() + 90000; notify('The family remembers. Revenue x1.25 for 90s!'); }},
+        { text: 'Not my problem', desc: '+5 heat (disloyalty)', cost: 0,
+          resolve: () => { state.heat = Math.min(100, state.heat + 5); notify('Word gets around you\'re unreliable. +5 heat', true); }},
+      ];
+    }
+  },
+  {
+    title: 'Evidence Locker',
+    desc: 'You\'ve found out where the cops keep the evidence against you.',
+    choices: () => {
+      const cost = getBribeCost();
+      return [
+        { text: 'Bribe the clerk', desc: `Cost: ${formatMoney(cost)}. Heat drops to 0`, cost: cost,
+          resolve: () => { state.heat = 0; notify('Evidence destroyed. Heat cleared!'); }},
+        { text: 'Burn it down', desc: 'Heat halved, but 40% chance of raid', cost: 0,
+          resolve: () => { state.heat *= 0.5; if (Math.random() < 0.4) { triggerRaid(); notify('Fire drew attention! Raided!', true); } else { notify('Evidence burned. Heat halved.'); } }},
+      ];
+    }
+  },
+  {
+    title: 'Street Hustler',
+    desc: 'A smooth-talking hustler pitches you a deal. Sounds almost too good.',
+    choices: () => {
+      const stake = state.cash * 0.02;
+      return [
+        { text: 'Back him', desc: `Cost: ${formatMoney(stake)}. 70%: earn ${formatMoney(stake * 5)} back. 30%: lose it all`, cost: stake,
+          resolve: () => { if (Math.random() < 0.7) { addCash(stake * 5); notify(`He delivered! Earned ${formatMoney(stake * 5)}`); } else { notify('He was a con. Money\'s gone.', true); } }},
+        { text: 'Walk away', desc: 'No effect', cost: 0,
+          resolve: () => { notify('You keep walking.'); }},
+      ];
+    }
   },
 ];
 
@@ -1159,6 +1220,7 @@ function getDefaultState() {
     lastSaveTime: Date.now(),
     revenueBoostEnd: 0,
     revenueBoostMult: 1,
+    raidImmunityEnd: 0,
     rackets: RACKETS.map(r => ({
       id: r.id,
       level: 0,
@@ -1278,6 +1340,23 @@ function getBribeCost() { return Math.max(100, state.totalEarned * 0.001) * (1 +
 function getOmertaMultiplier() { return 1 + state.omertaPoints * 0.5; }
 function getPrestigeGain() { return Math.floor(Math.sqrt(state.totalEarned / 1e10)); }
 
+function getCurrentDPS() {
+  let dps = 0;
+  RACKETS.forEach((def, i) => {
+    const rs = state.rackets[i];
+    if (rs.level > 0 && rs.hasCrew && !rs.raided) {
+      dps += getRevenue(def, rs.level) / (getTime(def, rs.level) / 1000);
+    }
+  });
+  return dps;
+}
+
+function addCash(amount) {
+  state.cash += amount;
+  state.totalEarned += amount;
+  state.lifetimeEarned += amount;
+}
+
 function getCurrentRankIndex() {
   let idx = 0;
   for (let i = RANKS.length - 1; i >= 0; i--) {
@@ -1372,7 +1451,7 @@ function renderRackets() {
     const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
     const time = rs.level === 0 ? getTime(def, 1) : getTime(def, rs.level);
     const crewCost = getCrewCost(def);
-    const iconClass = rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable';
+    const iconClass = rs.level === 0 ? 'disabled' : rs.raided ? 'clickable' : rs.hasCrew ? 'automated' : 'clickable';
     const { revenue: mRev, speed: mSpd } = getMilestoneMultipliers(rs.level);
     const revLabel = mRev > 1 ? '\u{1F4B2}x' + mRev : '';
     const spdLabel = mSpd > 1 ? '\u{26A1}x' + mSpd : '';
@@ -1396,7 +1475,6 @@ function renderRackets() {
       </div>
       <div class="racket-actions">
         <button class="btn-upgrade" onclick="buyRacket(${i})" ${!canBuy ? 'disabled' : ''}><span class="buy-label">${buyTop}</span><span class="buy-price">${buyBot}</span></button>
-        ${rs.level > 0 && !rs.hasCrew && rs.crewArrested ? `<button class="btn-crew" onclick="bailCrew(${i})" style="color:var(--red);border-color:var(--red);" ${state.cash < getBailCost(def) ? 'disabled' : ''}>Bail \u00b7 ${formatMoney(getBailCost(def))}</button>` : ''}
       </div>
     `;
     list.appendChild(card);
@@ -1422,8 +1500,28 @@ function renderCrewList() {
   const list = document.getElementById('crew-list');
   let html = '';
 
+  // Bail section — show arrested crew at top
+  const arrested = RACKETS.map((def, i) => ({ def, rs: state.rackets[i], i })).filter(({ rs }) => rs.crewArrested && rs.raided);
+  if (arrested.length > 0) {
+    html += '<div style="font-size:12px;color:var(--red);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Arrested — Bail Required</div>';
+    html += arrested.map(({ def, rs, i }) => {
+      const bail = getBailCost(def);
+      const cm = CREW_MEMBERS.find(c => c.racket === def.id && c.automates);
+      const name = cm ? cm.name : 'Crew';
+      return `<div class="crew-card" style="border-color:var(--red);">
+        <div class="crew-header">
+          <span class="crew-name">${name}</span>
+          <span class="crew-perk" style="color:var(--red);">${def.icon} ${def.name} — RAIDED</span>
+        </div>
+        <button class="crew-assign-btn" style="color:var(--red);border-color:var(--red);" onclick="bailCrew(${i})" ${state.cash < bail ? 'disabled' : ''}>
+          Bail \u00b7 ${formatMoney(bail)}
+        </button>
+      </div>`;
+    }).join('');
+  }
+
   // Crew members
-  html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Crew</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);margin:' + (arrested.length > 0 ? '16px' : '0') + ' 0 8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Crew</div>';
   html += CREW_MEMBERS.map(cm => {
     const owned = state.crewOwned.includes(cm.id);
     const cost = getCrewMemberCost(cm);
@@ -1431,15 +1529,16 @@ function renderCrewList() {
     const racketState = racketDef ? state.rackets[RACKETS.indexOf(racketDef)] : null;
     const racketOwned = !racketDef || (racketState && racketState.level > 0);
     const locked = cm.automates && !racketOwned;
+    const isArrested = racketState && racketState.crewArrested;
 
-    return `<div class="crew-card${owned ? ' assigned' : ''}" style="${locked ? 'opacity:0.35;pointer-events:none;' : ''}">
+    return `<div class="crew-card${owned ? ' assigned' : ''}" style="${locked || isArrested ? 'opacity:0.35;pointer-events:none;' : ''}">
       <div class="crew-header">
         <span class="crew-name">${cm.name}</span>
         <span class="crew-perk">${cm.perk}</span>
       </div>
-      ${racketDef ? `<div class="crew-desc">${racketDef.icon} ${racketDef.name}</div>` : `<div class="crew-desc">Applies to all rackets</div>`}
+      ${racketDef ? `<div class="crew-desc">${racketDef.icon} ${racketDef.name}${isArrested ? ' (Arrested)' : ''}</div>` : `<div class="crew-desc">Applies to all rackets</div>`}
       <button class="crew-assign-btn${owned ? ' active' : ''}" onclick="buyCrew('${cm.id}')" ${owned || state.cash < cost ? 'disabled' : ''}>
-        ${owned ? 'Recruited' : 'Recruit \u00b7 ' + formatMoney(cost)}
+        ${owned ? (isArrested ? 'Arrested' : 'Recruited') : 'Recruit \u00b7 ' + formatMoney(cost)}
       </button>
     </div>`;
   }).join('');
@@ -1469,14 +1568,7 @@ function renderCrewList() {
 function updateUI() {
   document.getElementById('cash-display').textContent = formatMoney(state.cash);
 
-  let dps = 0;
-  RACKETS.forEach((def, i) => {
-    const rs = state.rackets[i];
-    if (rs.level > 0 && rs.hasCrew && !rs.raided) {
-      dps += getRevenue(def, rs.level) / (getTime(def, rs.level) / 1000);
-    }
-  });
-  document.getElementById('dps-display').textContent = formatMoney(dps);
+  document.getElementById('dps-display').textContent = formatMoney(getCurrentDPS());
 
   const heatPct = Math.min(100, Math.max(0, state.heat));
   document.getElementById('heat-bar-inner').style.width = heatPct + '%';
@@ -1517,7 +1609,8 @@ function updateUI() {
   document.getElementById('stat-prestiges').textContent = state.prestiges;
   document.getElementById('stat-events').textContent = state.eventsCompleted;
 
-  // Crew alert badge — show when any crew member is affordable and not yet owned
+  // Crew alert badge — show when crew affordable OR crew arrested
+  const hasArrested = state.rackets.some(rs => rs.crewArrested && rs.raided);
   const canBuyCrew = CREW_MEMBERS.some(cm => {
     if (state.crewOwned.includes(cm.id)) return false;
     if (cm.automates && cm.racket) {
@@ -1526,7 +1619,9 @@ function updateUI() {
     }
     return state.cash >= getCrewMemberCost(cm);
   });
-  document.getElementById('crew-alert').classList.toggle('visible', canBuyCrew);
+  const alertEl = document.getElementById('crew-alert');
+  alertEl.classList.toggle('visible', canBuyCrew || hasArrested);
+  alertEl.style.background = hasArrested ? 'var(--red)' : 'var(--green)';
 
   // Update racket card states inline
   RACKETS.forEach((def, i) => {
@@ -1547,7 +1642,7 @@ function updateUI() {
     card.classList.toggle('raid', rs.raided);
 
     const icon = card.querySelector('.racket-icon');
-    if (icon) icon.className = 'racket-icon ' + (rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable');
+    if (icon) icon.className = 'racket-icon ' + (rs.level === 0 ? 'disabled' : rs.raided ? 'clickable' : rs.hasCrew ? 'automated' : 'clickable');
 
     // Update milestone badges
     const { revenue: mRev, speed: mSpd } = getMilestoneMultipliers(rs.level);
@@ -1572,12 +1667,6 @@ function updateUI() {
       if (prc) prc.textContent = buyBot;
     }
 
-    const crewBtn = card.querySelector('.btn-crew');
-    if (crewBtn && rs.crewArrested) {
-      const bail = getBailCost(def);
-      crewBtn.disabled = state.cash < bail;
-      crewBtn.textContent = `Bail \u00b7 ${formatMoney(bail)}`;
-    }
 
 
   });
@@ -1630,7 +1719,9 @@ function buyRacket(index) {
 
 function runRacket(index) {
   const rs = state.rackets[index];
-  if (rs.level === 0 || rs.running || rs.raided) return;
+  if (rs.level === 0) return;
+  if (rs.raided) { openSheet('crew'); return; }
+  if (rs.running) return;
   rs.running = true;
   rs.progress = 0;
 }
@@ -1643,8 +1734,12 @@ function bailCrew(index) {
   state.cash -= cost;
   rs.hasCrew = true;
   rs.crewArrested = false;
-  if (!rs.raided) { rs.running = true; rs.progress = 0; }
-  notify(`Crew bailed out for ${def.name}`);
+  rs.raided = false;
+  rs.running = true;
+  rs.progress = 0;
+  state.heat = Math.max(0, state.heat - 15);
+  notify(`Crew bailed out. ${def.name} is back in operation.`);
+  renderCrewList();
   renderRackets();
 }
 
@@ -1741,32 +1836,27 @@ function triggerRaid() {
 
   showCaptainOverlay('Take em away boys!', 2500);
   const crewMsg = hadCrew ? ' Crew arrested!' : '';
-  notify(`RAID! ${RACKETS[target.i].name} shut down!${crewMsg}`, true);
-
-  setTimeout(() => {
-    target.rs.raided = false;
-    state.heat = Math.max(0, state.heat - 15);
-    notify(`${RACKETS[target.i].name} is back in operation.`);
-    renderRackets();
-  }, 8000 + Math.random() * 7000);
+  notify(`RAID! ${RACKETS[target.i].name} shut down! Bail your crew to resume.${crewMsg}`, true);
+  renderRackets();
 }
 
 // ==================== RANDOM EVENTS ====================
 
-let _currentEvent = null;
+let _currentEventChoices = null;
 
 function triggerEvent() {
   const evt = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-  _currentEvent = evt;
+  const choices = evt.choices();
+  _currentEventChoices = choices;
+
   const overlay = document.createElement('div');
   overlay.className = 'event-overlay';
   overlay.id = 'active-event';
 
-  const choicesHtml = evt.choices.map((c, ci) => {
-    const cost = Math.max(c.minCost, state.totalEarned * c.costPct);
-    const canAfford = state.cash >= cost || cost === 0;
+  const choicesHtml = choices.map((c, ci) => {
+    const canAfford = state.cash >= c.cost || c.cost === 0;
     return `<button class="event-choice-btn" onclick="resolveEvent(${ci})" ${!canAfford ? 'disabled' : ''}>
-      ${c.text}<span class="event-choice-cost">${cost > 0 ? 'Cost: ' + formatMoney(cost) + ' \u2014 ' : ''}${c.rewardDesc}</span>
+      ${c.text}<span class="event-choice-cost">${c.desc}</span>
     </button>`;
   }).join('');
 
@@ -1775,31 +1865,17 @@ function triggerEvent() {
 }
 
 function resolveEvent(choiceIndex) {
-  const evt = _currentEvent;
-  if (!evt) return;
-  const choice = evt.choices[choiceIndex];
-  const cost = Math.max(choice.minCost, state.totalEarned * choice.costPct);
+  const choices = _currentEventChoices;
+  if (!choices) return;
+  const choice = choices[choiceIndex];
 
-  if (cost > 0 && state.cash < cost) return;
-  state.cash -= cost;
+  if (choice.cost > 0 && state.cash < choice.cost) return;
+  if (choice.cost > 0) state.cash -= choice.cost;
   state.eventsCompleted++;
 
-  if (choice.reward === 'cash') {
-    const bonus = state.totalEarned * choice.rewardPct;
-    state.cash += bonus;
-    state.totalEarned += bonus;
-    state.lifetimeEarned += bonus;
-    notify(`Earned ${formatMoney(bonus)} bonus cash!`);
-  } else if (choice.reward === 'heat') {
-    state.heat = Math.max(0, state.heat + choice.rewardAmt);
-    notify(`Heat reduced by ${Math.abs(choice.rewardAmt)}!`);
-  } else if (choice.reward === 'revenue') {
-    state.revenueBoostMult = choice.rewardMult;
-    state.revenueBoostEnd = Date.now() + choice.rewardDur;
-    notify(`Revenue boosted by ${Math.round((choice.rewardMult - 1) * 100)}% for ${choice.rewardDur / 1000}s!`);
-  }
+  choice.resolve();
 
-  _currentEvent = null;
+  _currentEventChoices = null;
   const overlayEl = document.getElementById('active-event');
   if (overlayEl) {
     overlayEl.style.animation = 'bribe-fade-out 0.3s forwards';
@@ -1875,7 +1951,7 @@ function gameLoop(now) {
   });
 
   if (state.heat > 0) state.heat = Math.max(0, state.heat - 0.02 * (dt / 1000));
-  if (state.heat > 50 && Math.random() < (state.heat / 100) * 0.0005 * (dt / 16)) triggerRaid();
+  if (state.heat > 50 && Date.now() > (state.raidImmunityEnd || 0) && Math.random() < (state.heat / 100) * 0.0005 * (dt / 16)) triggerRaid();
 
   // Random events every 90-180 seconds
   eventTimer += dt;
