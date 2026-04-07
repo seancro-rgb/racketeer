@@ -695,6 +695,193 @@
     to { opacity: 1; }
   }
 
+  /* ============ BRIBE OVERLAY ============ */
+  .bribe-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 250;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: bribe-fade-in 0.3s ease-out;
+  }
+
+  @keyframes bribe-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes bribe-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  .bribe-captain {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: bribe-slide-up 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @keyframes bribe-slide-up {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bribe-speech {
+    background: white;
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    position: relative;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .bribe-speech::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+  }
+
+  .bribe-avatar {
+    width: 120px;
+    height: 140px;
+    background: linear-gradient(180deg, #1a2744 0%, #0f1a30 100%);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    border: 2px solid #2a3a5a;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  /* Police cap */
+  .cap {
+    width: 80px;
+    height: 22px;
+    background: #1a2744;
+    border-radius: 0 0 40px 40px;
+    margin-top: 8px;
+    position: relative;
+    border-bottom: 2px solid #c9a84c;
+  }
+
+  .cap::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 10px;
+    background: #1a2744;
+    border-radius: 4px;
+  }
+
+  .cap-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: #c9a84c;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  /* Face */
+  .face {
+    width: 60px;
+    height: 55px;
+    background: #d4a574;
+    border-radius: 50% 50% 45% 45%;
+    margin-top: 4px;
+    position: relative;
+  }
+
+  .eyes {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+  }
+
+  .eye {
+    width: 6px;
+    height: 6px;
+    background: #2a2a2a;
+    border-radius: 50%;
+  }
+
+  .mustache {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 8px;
+    background: #3a2a1a;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .mouth {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 4px;
+    background: #a0604a;
+    border-radius: 0 0 6px 6px;
+  }
+
+  /* Uniform */
+  .uniform {
+    width: 100%;
+    flex: 1;
+    background: #1a2744;
+    margin-top: 4px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .badge-chest {
+    width: 16px;
+    height: 16px;
+    background: #c9a84c;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    margin-top: 8px;
+  }
+
+  .collar-left, .collar-right {
+    position: absolute;
+    top: 0;
+    width: 20px;
+    height: 14px;
+    background: #223458;
+  }
+
+  .collar-left { left: 20px; transform: skewY(10deg); }
+  .collar-right { right: 20px; transform: skewY(-10deg); }
+
   /* ============ DESKTOP (wider than 700px) ============ */
   @media (min-width: 700px) {
     :root {
@@ -916,6 +1103,7 @@ function getDefaultState() {
       id: r.id,
       level: 0,
       hasCrew: false,
+      crewArrested: false,
       running: false,
       progress: 0,
       raided: false,
@@ -972,6 +1160,10 @@ function getTime(racketDef, level) {
 
 function getCrewCost(racketDef) {
   return racketDef.baseCost * 10;
+}
+
+function getBailCost(racketDef) {
+  return getCrewCost(racketDef) * 0.5;
 }
 
 function getMaxBuy(racketDef, currentLevel, cash) {
@@ -1107,7 +1299,12 @@ function renderRackets() {
         <button class="btn-upgrade" onclick="buyRacket(${i})" ${!canBuy ? 'disabled' : ''}>
           ${buyLabel}
         </button>
-        ${rs.level > 0 && !rs.hasCrew ? `
+        ${rs.level > 0 && !rs.hasCrew && rs.crewArrested ? `
+          <button class="btn-crew" onclick="bailCrew(${i})" style="color:var(--red);border-color:var(--red);"
+            ${state.cash < getBailCost(def) ? 'disabled' : ''}>
+            Bail \u00b7 ${formatMoney(getBailCost(def))}
+          </button>
+        ` : rs.level > 0 && !rs.hasCrew ? `
           <button class="btn-crew" onclick="hireCrew(${i})"
             ${state.cash < crewCost ? 'disabled' : ''}>
             Crew \u00b7 ${formatMoney(crewCost)}
@@ -1239,9 +1436,15 @@ function updateUI() {
 
     const crewBtn = card.querySelector('.btn-crew');
     if (crewBtn) {
-      const crewCost = getCrewCost(def);
-      crewBtn.disabled = state.cash < crewCost;
-      crewBtn.textContent = `Crew \u00b7 ${formatMoney(crewCost)}`;
+      if (rs.crewArrested) {
+        const bail = getBailCost(def);
+        crewBtn.disabled = state.cash < bail;
+        crewBtn.textContent = `Bail \u00b7 ${formatMoney(bail)}`;
+      } else {
+        const crewCost = getCrewCost(def);
+        crewBtn.disabled = state.cash < crewCost;
+        crewBtn.textContent = `Crew \u00b7 ${formatMoney(crewCost)}`;
+      }
     }
 
     const milestones = card.querySelectorAll('.milestone');
@@ -1296,8 +1499,56 @@ function hireCrew(index) {
   rs.hasCrew = true;
   rs.running = true;
   rs.progress = 0;
+  rs.crewArrested = false;
   notify(`Crew assigned to ${def.name}`);
   renderRackets();
+}
+
+function bailCrew(index) {
+  const def = RACKETS[index];
+  const rs = state.rackets[index];
+  const cost = getBailCost(def);
+  if (state.cash < cost || !rs.crewArrested) return;
+  state.cash -= cost;
+  rs.hasCrew = true;
+  rs.crewArrested = false;
+  if (!rs.raided) {
+    rs.running = true;
+    rs.progress = 0;
+  }
+  notify(`Crew bailed out for ${def.name}`);
+  renderRackets();
+}
+
+function showCaptainOverlay(message, duration) {
+  const overlay = document.createElement('div');
+  overlay.className = 'bribe-overlay';
+  overlay.onclick = () => { overlay.style.animation = 'bribe-fade-out 0.3s forwards'; setTimeout(() => overlay.remove(), 300); };
+  overlay.innerHTML = `
+    <div class="bribe-captain">
+      <div class="bribe-speech">${message}</div>
+      <div class="bribe-avatar">
+        <div class="cap"><div class="cap-badge"></div></div>
+        <div class="face">
+          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+          <div class="mustache"></div>
+          <div class="mouth"></div>
+        </div>
+        <div class="uniform">
+          <div class="collar-left"></div>
+          <div class="collar-right"></div>
+          <div class="badge-chest"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    if (overlay.parentNode) {
+      overlay.style.animation = 'bribe-fade-out 0.3s forwards';
+      setTimeout(() => overlay.remove(), 300);
+    }
+  }, duration || 2000);
 }
 
 function bribeCops() {
@@ -1305,7 +1556,7 @@ function bribeCops() {
   if (state.cash < cost || state.heat <= 0) return;
   state.cash -= cost;
   state.heat = Math.max(0, state.heat - 25);
-  notify('Cops looked the other way...');
+  showCaptainOverlay('Nothing to see here...', 2000);
 }
 
 function setBulk(n) {
@@ -1350,21 +1601,23 @@ function triggerRaid() {
   target.rs.progress = 0;
   state.timesRaided++;
 
-  const overlay = document.createElement('div');
-  overlay.className = 'raid-overlay';
-  document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 2000);
+  // Crew gets arrested during raid
+  const hadCrew = target.rs.hasCrew;
+  if (hadCrew) {
+    target.rs.hasCrew = false;
+    target.rs.crewArrested = true;
+  }
 
-  notify(`RAID! ${RACKETS[target.i].name} shut down!`, true);
+  showCaptainOverlay('Take em away boys!', 2500);
+
+  const crewMsg = hadCrew ? ' Crew arrested!' : '';
+  notify(`RAID! ${RACKETS[target.i].name} shut down!${crewMsg}`, true);
 
   setTimeout(() => {
     target.rs.raided = false;
     state.heat = Math.max(0, state.heat - 15);
     notify(`${RACKETS[target.i].name} is back in operation.`);
-    if (target.rs.hasCrew) {
-      target.rs.running = true;
-      target.rs.progress = 0;
-    }
+    renderRackets();
   }, 8000 + Math.random() * 7000);
 }
 
