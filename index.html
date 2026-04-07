@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Made Man — Mafia Idle Tycoon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MobbedUp</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -21,6 +21,10 @@
     --text: #e8e4dc;
     --text-dim: #8a8478;
     --border: #2a2a3a;
+    --bottom-nav-h: 56px;
+    --header-h: 48px;
+    --ticker-h: 32px;
+    --heat-h: 36px;
   }
 
   body {
@@ -28,83 +32,118 @@
     color: var(--text);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Header */
+  /* ============ TOP HEADER ============ */
   #header {
-    background: linear-gradient(180deg, #111118 0%, var(--bg-dark) 100%);
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: #111118;
     border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    position: sticky;
-    top: 0;
+    justify-content: space-between;
+    padding: 0 12px;
     z-index: 100;
   }
 
   #header h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 28px;
+    font-size: 18px;
     color: var(--gold);
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   #header-stats {
     display: flex;
-    gap: 24px;
+    gap: 16px;
     align-items: center;
   }
 
-  .header-stat {
-    text-align: right;
-  }
+  .header-stat { text-align: right; }
 
   .header-stat .label {
-    font-size: 10px;
+    font-size: 8px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     color: var(--text-dim);
+    line-height: 1;
   }
 
   .header-stat .value {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--gold);
+    line-height: 1.2;
   }
 
-  #rank-display .value {
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  /* Heat bar */
-  #heat-container {
+  /* ============ NEWS TICKER ============ */
+  #news-ticker {
+    position: fixed;
+    top: var(--header-h);
+    left: 0; right: 0;
+    height: var(--ticker-h);
     background: var(--bg-card);
     border-bottom: 1px solid var(--border);
-    padding: 8px 24px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    padding: 0 12px;
+    gap: 8px;
+    z-index: 100;
+    overflow: hidden;
   }
 
-  #heat-container .heat-label {
+  #news-ticker .news-icon {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  #news-text {
     font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ============ HEAT BAR (above bottom nav) ============ */
+  #heat-container {
+    position: fixed;
+    bottom: var(--bottom-nav-h);
+    left: 0; right: 0;
+    height: var(--heat-h);
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .heat-label {
+    font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--red);
     font-weight: 700;
-    min-width: 50px;
+    min-width: 32px;
   }
 
   #heat-bar-outer {
     flex: 1;
-    height: 12px;
+    height: 8px;
     background: #1a1015;
-    border-radius: 6px;
+    border-radius: 4px;
     overflow: hidden;
     border: 1px solid #2a1520;
   }
@@ -113,15 +152,15 @@
     height: 100%;
     width: 0%;
     background: linear-gradient(90deg, #e67e22, #e74c3c, #c0392b);
-    border-radius: 6px;
+    border-radius: 4px;
     transition: width 0.3s;
   }
 
   #heat-value {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--red);
-    min-width: 40px;
+    min-width: 28px;
     text-align: right;
   }
 
@@ -129,9 +168,9 @@
     background: var(--red-dim);
     color: white;
     border: none;
-    padding: 4px 12px;
+    padding: 3px 8px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     cursor: pointer;
     text-transform: uppercase;
@@ -142,45 +181,102 @@
   #bribe-btn:hover { background: var(--red); }
   #bribe-btn:disabled { opacity: 0.4; cursor: default; }
 
-  /* Layout */
-  #main {
+  /* ============ BOTTOM NAV ============ */
+  #bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: var(--bottom-nav-h);
+    background: #111118;
+    border-top: 1px solid var(--border);
     display: flex;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
-    gap: 20px;
+    z-index: 100;
   }
 
-  #rackets-panel {
+  .nav-btn {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.2s, background 0.2s;
   }
 
-  #side-panel {
-    width: 320px;
+  .nav-btn:last-child { border-right: none; }
+  .nav-btn.active { color: var(--gold); background: rgba(212,165,74,0.08); }
+  .nav-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  /* ============ MAIN SCROLL AREA ============ */
+  #main-scroll {
+    position: fixed;
+    top: calc(var(--header-h) + var(--ticker-h));
+    bottom: calc(var(--bottom-nav-h) + var(--heat-h));
+    left: 0; right: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ============ TAB PANELS ============ */
+  .tab-panel {
+    display: none;
+    padding: 10px;
+    min-height: 100%;
+  }
+
+  .tab-panel.active { display: block; }
+
+  /* ============ RACKET CARDS ============ */
+  #bulk-toggle {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    gap: 4px;
+    margin-bottom: 10px;
+    position: sticky;
+    top: 0;
+    background: var(--bg-dark);
+    padding: 6px 0;
+    z-index: 10;
   }
 
-  /* Racket cards */
+  .bulk-btn {
+    flex: 1;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .bulk-btn.active {
+    background: var(--gold-dim);
+    color: #fff;
+    border-color: var(--gold-dim);
+  }
+
   .racket-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 10px;
+    padding: 12px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    margin-bottom: 8px;
     transition: border-color 0.2s;
   }
 
-  .racket-card:hover { border-color: var(--gold-dim); }
-
   .racket-card.locked {
-    opacity: 0.4;
+    opacity: 0.35;
     pointer-events: none;
   }
 
@@ -191,27 +287,30 @@
 
   @keyframes raid-pulse {
     from { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
-    to { box-shadow: 0 0 20px 4px rgba(192, 57, 43, 0.3); }
+    to { box-shadow: 0 0 16px 2px rgba(192, 57, 43, 0.3); }
   }
 
   .racket-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 26px;
     flex-shrink: 0;
     background: #1a1a2e;
     border: 1px solid var(--border);
-    cursor: pointer;
     user-select: none;
     transition: transform 0.1s, box-shadow 0.1s;
+    -webkit-user-select: none;
   }
 
-  .racket-icon:active {
-    transform: scale(0.9);
+  .racket-icon:active { transform: scale(0.88); }
+
+  .racket-icon.clickable {
+    cursor: pointer;
+    border-color: var(--gold-dim);
   }
 
   .racket-icon.clickable:hover {
@@ -222,23 +321,46 @@
   .racket-icon.automated {
     border-color: var(--green);
     box-shadow: 0 0 6px rgba(39,174,96,0.2);
-    cursor: default;
   }
 
   .racket-icon.disabled {
-    cursor: default;
     opacity: 0.5;
+  }
+
+  .racket-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .racket-name {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .racket-earnings {
+    font-size: 11px;
+    color: var(--gold-dim);
+  }
+
+  .racket-level {
+    font-size: 10px;
+    color: var(--text-dim);
   }
 
   .racket-milestones {
     display: flex;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 3px;
+    margin-top: 3px;
+    flex-wrap: wrap;
   }
 
   .milestone {
-    font-size: 9px;
-    padding: 1px 4px;
+    font-size: 8px;
+    padding: 1px 3px;
     border-radius: 3px;
     background: #1a1a2e;
     color: var(--text-dim);
@@ -251,32 +373,11 @@
     border-color: var(--gold-dim);
   }
 
-  .racket-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .racket-name {
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 2px;
-  }
-
-  .racket-earnings {
-    font-size: 12px;
-    color: var(--gold-dim);
-  }
-
-  .racket-level {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
   .racket-progress-outer {
-    height: 6px;
+    height: 5px;
     background: #1a1a2e;
     border-radius: 3px;
-    margin-top: 6px;
+    margin-top: 4px;
     overflow: hidden;
   }
 
@@ -291,7 +392,7 @@
   .racket-actions {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
   }
 
@@ -299,8 +400,8 @@
     background: transparent;
     color: var(--gold);
     border: 1px solid var(--gold-dim);
-    padding: 5px 12px;
-    border-radius: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
@@ -314,8 +415,8 @@
     background: transparent;
     color: var(--green);
     border: 1px solid var(--green);
-    padding: 5px 12px;
-    border-radius: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
@@ -325,30 +426,128 @@
   .btn-crew:hover { background: rgba(39,174,96,0.1); }
   .btn-crew:disabled { opacity: 0.4; cursor: default; }
 
-  /* Side panel sections */
-  .side-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
+  /* ============ BOTTOM SHEET ============ */
+  .sheet-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.25s;
   }
 
-  .side-section h3 {
+  .sheet-backdrop.open {
+    display: block;
+    opacity: 1;
+  }
+
+  .sheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    z-index: 201;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 75vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--text-dim);
+    border-radius: 2px;
+    margin: 10px auto 0;
+  }
+
+  .sheet-header {
+    padding: 14px 16px 8px;
     font-family: 'Playfair Display', serif;
-    font-size: 16px;
+    font-size: 18px;
     color: var(--gold);
-    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
 
-  /* Rank progress */
+  .sheet-body {
+    padding: 0 16px 24px;
+  }
+
+  /* ============ RANK SHEET ============ */
+  .rank-current {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+
+  .rank-list {
+    margin-top: 16px;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .rank-item:last-child { border-bottom: none; }
+
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    background: #1a1a2e;
+    border: 2px solid var(--border);
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .rank-item.achieved .rank-badge {
+    background: rgba(212,165,74,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .rank-item.current .rank-badge {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--bg-dark);
+  }
+
+  .rank-item-info { flex: 1; }
+
+  .rank-item-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .rank-item.achieved .rank-item-name,
+  .rank-item.current .rank-item-name { color: var(--gold); }
+
+  .rank-item-req {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
   #rank-progress-outer {
     height: 8px;
     background: #1a1a2e;
     border-radius: 4px;
     overflow: hidden;
-    margin-top: 8px;
+    margin-top: 10px;
   }
 
   #rank-progress-inner {
@@ -360,21 +559,37 @@
   }
 
   #rank-info {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-dim);
     margin-top: 6px;
   }
 
-  /* Prestige */
-  #prestige-section {
-    border-color: var(--gold-dim);
+  /* ============ PRESTIGE SHEET ============ */
+  #prestige-info {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 16px;
   }
 
-  #prestige-info {
-    font-size: 12px;
+  .omerta-display-big {
+    text-align: center;
+    padding: 20px;
+    background: #1a1a2e;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .omerta-display-big .pts {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .omerta-display-big .mult {
+    font-size: 14px;
     color: var(--text-dim);
-    margin-bottom: 10px;
-    line-height: 1.5;
+    margin-top: 4px;
   }
 
   #prestige-btn {
@@ -382,10 +597,10 @@
     background: linear-gradient(135deg, var(--gold-dim), var(--gold));
     color: #0a0a0f;
     border: none;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 14px;
+    border-radius: 10px;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
@@ -394,59 +609,33 @@
   #prestige-btn:hover { filter: brightness(1.1); }
   #prestige-btn:disabled { opacity: 0.4; cursor: default; }
 
-  /* News ticker */
-  #news-ticker {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--text-dim);
-    font-style: italic;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  #news-ticker .news-icon {
-    color: var(--gold);
-    font-weight: 700;
-    font-style: normal;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    flex-shrink: 0;
-  }
-
-  /* Stats list */
+  /* ============ STATS SHEET ============ */
   .stat-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
-    font-size: 13px;
+    padding: 10px 0;
+    font-size: 14px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
 
   .stat-row:last-child { border-bottom: none; }
-
   .stat-row .stat-label { color: var(--text-dim); }
   .stat-row .stat-value { font-weight: 600; }
 
-  /* Save controls */
   #save-controls {
     display: flex;
     gap: 8px;
+    margin-top: 16px;
   }
 
   #save-controls button {
     flex: 1;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 12px;
+    border-radius: 8px;
     border: 1px solid var(--border);
-    background: var(--bg-card);
+    background: var(--bg-dark);
     color: var(--text-dim);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     text-transform: uppercase;
@@ -458,32 +647,33 @@
     color: var(--text);
   }
 
-  /* Notifications */
+  /* ============ NOTIFICATIONS ============ */
   #notifications {
     position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 200;
+    top: calc(var(--header-h) + var(--ticker-h) + 8px);
+    left: 10px; right: 10px;
+    z-index: 300;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    pointer-events: none;
   }
 
   .notification {
     background: var(--bg-card);
     border: 1px solid var(--gold-dim);
-    border-radius: 6px;
-    padding: 10px 16px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
     animation: notif-in 0.3s ease-out, notif-out 0.3s ease-in 2.7s forwards;
-    max-width: 300px;
+    pointer-events: auto;
   }
 
   .notification.bad { border-color: var(--red); }
 
   @keyframes notif-in {
-    from { opacity: 0; transform: translateX(40px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes notif-out {
@@ -491,7 +681,6 @@
     to { opacity: 0; }
   }
 
-  /* Raid overlay */
   .raid-overlay {
     position: fixed;
     inset: 0;
@@ -506,46 +695,44 @@
     to { opacity: 1; }
   }
 
-  /* Responsive */
-  @media (max-width: 900px) {
-    #main { flex-direction: column; }
-    #side-panel { width: 100%; }
-  }
+  /* ============ DESKTOP (wider than 700px) ============ */
+  @media (min-width: 700px) {
+    :root {
+      --header-h: 52px;
+      --ticker-h: 34px;
+      --heat-h: 40px;
+      --bottom-nav-h: 48px;
+    }
 
-  /* Bulk buy toggle */
-  #bulk-toggle {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 12px;
-  }
+    #main-scroll { max-width: 600px; margin: 0 auto; }
 
-  .bulk-btn {
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-  }
+    .racket-card { padding: 14px 16px; }
 
-  .bulk-btn.active {
-    background: var(--gold-dim);
-    color: #fff;
-    border-color: var(--gold-dim);
+    .racket-icon { width: 56px; height: 56px; font-size: 28px; }
+
+    #header { padding: 0 20px; }
+    #header h1 { font-size: 22px; }
+    .header-stat .value { font-size: 18px; }
+
+    .sheet {
+      max-width: 480px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .sheet.open {
+      transform: translateX(-50%) translateY(0);
+    }
   }
 </style>
 </head>
 <body>
 
+<!-- ============ HEADER ============ -->
 <div id="header">
-  <h1>Made Man</h1>
+  <h1>MobbedUp</h1>
   <div id="header-stats">
-    <div class="header-stat" id="rank-display">
-      <div class="label">Rank</div>
-      <div class="value" id="rank-name">Street Punk</div>
-    </div>
     <div class="header-stat">
       <div class="label">Cash</div>
       <div class="value" id="cash-display">$0</div>
@@ -557,73 +744,98 @@
   </div>
 </div>
 
+<!-- ============ NEWS TICKER ============ -->
+<div id="news-ticker">
+  <span class="news-icon">Headline</span>
+  <span id="news-text">A new player emerges on the streets...</span>
+</div>
+
+<!-- ============ MAIN SCROLL AREA ============ -->
+<div id="main-scroll">
+  <!-- Rackets tab -->
+  <div class="tab-panel active" id="tab-rackets">
+    <div id="bulk-toggle">
+      <button class="bulk-btn active" onclick="setBulk(1)">x1</button>
+      <button class="bulk-btn" onclick="setBulk(10)">x10</button>
+      <button class="bulk-btn" onclick="setBulk(100)">x100</button>
+      <button class="bulk-btn" onclick="setBulk('max')">Max</button>
+    </div>
+    <div id="racket-list"></div>
+  </div>
+</div>
+
+<!-- ============ HEAT BAR ============ -->
 <div id="heat-container">
   <span class="heat-label">HEAT</span>
   <div id="heat-bar-outer"><div id="heat-bar-inner"></div></div>
   <span id="heat-value">0%</span>
-  <button id="bribe-btn" onclick="bribeCops()">Bribe Cops</button>
+  <button id="bribe-btn" onclick="bribeCops()">Bribe</button>
 </div>
 
-<div id="main">
-  <div id="rackets-panel">
-    <div id="bulk-toggle">
-      <button class="bulk-btn active" onclick="setBulk(1)">x1</button>
-      <button class="bulk-btn" onclick="setBulk(10)">x10</button>
-      <button class="bulk-btn" onclick="setBulk(25)">x25</button>
-      <button class="bulk-btn" onclick="setBulk(100)">x100</button>
-    </div>
-    <div id="racket-list"></div>
+<!-- ============ BOTTOM NAV ============ -->
+<div id="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('rackets')" id="navbtn-rackets">Rackets</button>
+  <button class="nav-btn" onclick="openSheet('rank')" id="navbtn-rank" style="flex-direction:column;gap:0;line-height:1.3;">Rank<span id="rank-nav-label" style="font-size:8px;opacity:0.6;letter-spacing:0.5px;">Street Punk</span></button>
+  <button class="nav-btn" onclick="openSheet('prestige')" id="navbtn-prestige">Prestige</button>
+  <button class="nav-btn" onclick="openSheet('stats')" id="navbtn-stats">Stats</button>
+</div>
+
+<!-- ============ SHEET BACKDROP ============ -->
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+
+<!-- ============ RANK SHEET ============ -->
+<div class="sheet" id="sheet-rank">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">Rank</div>
+  <div class="sheet-body">
+    <div class="rank-current" id="current-rank-name">Street Punk</div>
+    <div id="rank-progress-outer"><div id="rank-progress-inner"></div></div>
+    <div id="rank-info">Earn $1,000 total to rank up</div>
+    <div class="rank-list" id="rank-list"></div>
   </div>
-  <div id="side-panel">
-    <div id="news-ticker">
-      <span class="news-icon">Headline</span>
-      <span id="news-text">A new player emerges on the streets...</span>
-    </div>
+</div>
 
-    <div class="side-section">
-      <h3>Rank</h3>
-      <div id="current-rank-name" style="font-weight:700;font-size:15px;">Street Punk</div>
-      <div id="rank-progress-outer"><div id="rank-progress-inner"></div></div>
-      <div id="rank-info">Earn $1,000 total to rank up</div>
+<!-- ============ PRESTIGE SHEET ============ -->
+<div class="sheet" id="sheet-prestige">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">Go to the Mattresses</div>
+  <div class="sheet-body">
+    <div id="prestige-info">
+      Reset your empire for <strong>Omert&agrave; Points</strong> that permanently boost all income. Requires Underboss rank.
     </div>
-
-    <div class="side-section" id="prestige-section">
-      <h3>Go to the Mattresses</h3>
-      <div id="prestige-info">
-        Reset your empire for <strong>Omert&agrave; Points</strong> that permanently boost all income. Requires Don rank.
-      </div>
-      <div style="margin-bottom:8px;">
-        <span style="font-size:12px;color:var(--text-dim);">Current Omert&agrave; Points:</span>
-        <span id="omerta-display" style="font-weight:700;color:var(--gold);"> 0</span>
-        <span style="font-size:12px;color:var(--text-dim);"> (x<span id="omerta-mult">1.00</span> income)</span>
-      </div>
-      <button id="prestige-btn" onclick="prestige()" disabled>Requires Don Rank</button>
+    <div class="omerta-display-big">
+      <div class="pts" id="omerta-display">0</div>
+      <div class="mult">Omert&agrave; Points (x<span id="omerta-mult">1.00</span> income)</div>
     </div>
+    <button id="prestige-btn" onclick="prestige()" disabled>Requires Underboss Rank</button>
+  </div>
+</div>
 
-    <div class="side-section">
-      <h3>Stats</h3>
-      <div class="stat-row">
-        <span class="stat-label">Total Earned</span>
-        <span class="stat-value" id="stat-total-earned">$0</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Rackets Owned</span>
-        <span class="stat-value" id="stat-rackets-owned">0</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Crew Hired</span>
-        <span class="stat-value" id="stat-crew-hired">0</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Times Raided</span>
-        <span class="stat-value" id="stat-raids">0</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Prestiges</span>
-        <span class="stat-value" id="stat-prestiges">0</span>
-      </div>
+<!-- ============ STATS SHEET ============ -->
+<div class="sheet" id="sheet-stats">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">Stats</div>
+  <div class="sheet-body">
+    <div class="stat-row">
+      <span class="stat-label">Total Earned</span>
+      <span class="stat-value" id="stat-total-earned">$0</span>
     </div>
-
+    <div class="stat-row">
+      <span class="stat-label">Rackets Owned</span>
+      <span class="stat-value" id="stat-rackets-owned">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Crew Hired</span>
+      <span class="stat-value" id="stat-crew-hired">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Times Raided</span>
+      <span class="stat-value" id="stat-raids">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Prestiges</span>
+      <span class="stat-value" id="stat-prestiges">0</span>
+    </div>
     <div id="save-controls">
       <button onclick="saveGame()">Save</button>
       <button onclick="if(confirm('Reset all progress?')){resetGame()}">Reset</button>
@@ -637,28 +849,28 @@
 // ==================== GAME DATA ====================
 
 const RACKETS = [
-  { id: 'pickpocket',   name: 'Pickpocketing',       icon: '🤏', baseCost: 4,         baseRevenue: 1,          baseTime: 1000,  heatPerRun: 0.1,  unlockCost: 0 },
-  { id: 'numbers',      name: 'Numbers Racket',      icon: '🎲', baseCost: 60,        baseRevenue: 8,          baseTime: 3000,  heatPerRun: 0.3,  unlockCost: 50 },
-  { id: 'protection',   name: 'Protection Racket',   icon: '👊', baseCost: 720,       baseRevenue: 54,         baseTime: 6000,  heatPerRun: 0.6,  unlockCost: 500 },
-  { id: 'bootlegging',  name: 'Bootlegging',         icon: '🥃', baseCost: 8640,      baseRevenue: 432,        baseTime: 12000, heatPerRun: 1.0,  unlockCost: 5000 },
-  { id: 'loansharking', name: 'Loan Sharking',        icon: '💰', baseCost: 103680,    baseRevenue: 3456,       baseTime: 24000, heatPerRun: 1.5,  unlockCost: 50000 },
-  { id: 'chopshop',     name: 'Chop Shop',           icon: '🔧', baseCost: 1244160,   baseRevenue: 27648,      baseTime: 48000, heatPerRun: 2.0,  unlockCost: 500000 },
-  { id: 'casino',       name: 'Underground Casino',  icon: '🎰', baseCost: 14929920,  baseRevenue: 221184,     baseTime: 96000, heatPerRun: 3.0,  unlockCost: 5e6 },
-  { id: 'nightclub',    name: 'Nightclub',           icon: '🍸', baseCost: 179159040, baseRevenue: 1769472,    baseTime: 192000,heatPerRun: 2.5,  unlockCost: 50e6 },
-  { id: 'drugs',        name: 'Drug Operation',      icon: '🧪', baseCost: 2.15e9,    baseRevenue: 14155776,   baseTime: 384000,heatPerRun: 5.0,  unlockCost: 500e6 },
-  { id: 'laundering',   name: 'Money Laundering',    icon: '🧺', baseCost: 2.58e10,   baseRevenue: 113246208,  baseTime: 600000,heatPerRun: -2.0, unlockCost: 5e9 },
-  { id: 'docks',        name: 'The Docks',           icon: '🚢', baseCost: 3.09e11,   baseRevenue: 905969664,  baseTime: 900000,heatPerRun: 4.0,  unlockCost: 50e9 },
-  { id: 'cityhall',     name: 'City Hall',           icon: '🏛️', baseCost: 3.71e12,   baseRevenue: 7247757312, baseTime: 1200000,heatPerRun:-5.0, unlockCost: 500e9 },
+  { id: 'pickpocket',   name: 'Pickpocketing',       icon: '\u{1F90F}', baseCost: 4,         baseRevenue: 1,          baseTime: 1000,  heatPerRun: 0.1,  unlockCost: 0 },
+  { id: 'numbers',      name: 'Numbers Racket',      icon: '\u{1F3B2}', baseCost: 60,        baseRevenue: 8,          baseTime: 3000,  heatPerRun: 0.3,  unlockCost: 50 },
+  { id: 'protection',   name: 'Protection Racket',   icon: '\u{1F44A}', baseCost: 720,       baseRevenue: 54,         baseTime: 6000,  heatPerRun: 0.6,  unlockCost: 500 },
+  { id: 'bootlegging',  name: 'Bootlegging',         icon: '\u{1F943}', baseCost: 8640,      baseRevenue: 432,        baseTime: 12000, heatPerRun: 1.0,  unlockCost: 5000 },
+  { id: 'loansharking', name: 'Loan Sharking',       icon: '\u{1F4B0}', baseCost: 103680,    baseRevenue: 3456,       baseTime: 24000, heatPerRun: 1.5,  unlockCost: 50000 },
+  { id: 'chopshop',     name: 'Chop Shop',           icon: '\u{1F527}', baseCost: 1244160,   baseRevenue: 27648,      baseTime: 48000, heatPerRun: 2.0,  unlockCost: 500000 },
+  { id: 'casino',       name: 'Underground Casino',  icon: '\u{1F3B0}', baseCost: 14929920,  baseRevenue: 221184,     baseTime: 96000, heatPerRun: 3.0,  unlockCost: 5e6 },
+  { id: 'nightclub',    name: 'Nightclub',           icon: '\u{1F378}', baseCost: 179159040, baseRevenue: 1769472,    baseTime: 192000,heatPerRun: 2.5,  unlockCost: 50e6 },
+  { id: 'drugs',        name: 'Drug Operation',      icon: '\u{1F9EA}', baseCost: 2.15e9,    baseRevenue: 14155776,   baseTime: 384000,heatPerRun: 5.0,  unlockCost: 500e6 },
+  { id: 'laundering',   name: 'Money Laundering',    icon: '\u{1F9FA}', baseCost: 2.58e10,   baseRevenue: 113246208,  baseTime: 600000,heatPerRun: -2.0, unlockCost: 5e9 },
+  { id: 'docks',        name: 'The Docks',           icon: '\u{1F6A2}', baseCost: 3.09e11,   baseRevenue: 905969664,  baseTime: 900000,heatPerRun: 4.0,  unlockCost: 50e9 },
+  { id: 'cityhall',     name: 'City Hall',           icon: '\u{1F3DB}\u{FE0F}', baseCost: 3.71e12, baseRevenue: 7247757312, baseTime: 1200000,heatPerRun:-5.0, unlockCost: 500e9 },
 ];
 
 const RANKS = [
-  { name: 'Street Punk',  totalEarned: 0 },
-  { name: 'Associate',    totalEarned: 1000 },
-  { name: 'Soldier',      totalEarned: 50000 },
-  { name: 'Capo',         totalEarned: 5e6 },
-  { name: 'Underboss',    totalEarned: 500e6 },
-  { name: 'Don',          totalEarned: 50e9 },
-  { name: 'Godfather',    totalEarned: 5e12 },
+  { name: 'Street Punk',   totalEarned: 0 },
+  { name: 'Associate',     totalEarned: 1000 },
+  { name: 'Soldier',       totalEarned: 50000 },
+  { name: 'Capo',          totalEarned: 5e6 },
+  { name: 'Consigliere',   totalEarned: 500e6 },
+  { name: 'Underboss',     totalEarned: 50e9 },
+  { name: 'Boss',          totalEarned: 5e12 },
 ];
 
 const NEWS = [
@@ -676,7 +888,14 @@ const NEWS = [
   "New nightclub opening draws suspiciously wealthy clientele.",
   "An offer was made. It could not be refused.",
   "Concrete shoes are on sale this season.",
-  "The Don sends his regards.",
+  "The Boss sends his regards.",
+];
+
+const MILESTONES = [
+  { level: 25,  revenueMultiplier: 2, speedMultiplier: 1, label: '25: x2' },
+  { level: 50,  revenueMultiplier: 2, speedMultiplier: 1, label: '50: x2' },
+  { level: 100, revenueMultiplier: 2, speedMultiplier: 2, label: '100: x2/s2' },
+  { level: 200, revenueMultiplier: 2, speedMultiplier: 2, label: '200: x2/s2' },
 ];
 
 // ==================== GAME STATE ====================
@@ -729,13 +948,6 @@ function getBulkCost(racketDef, currentLevel, count) {
   return total;
 }
 
-const MILESTONES = [
-  { level: 25,  revenueMultiplier: 2, speedMultiplier: 1, label: '25: x2' },
-  { level: 50,  revenueMultiplier: 2, speedMultiplier: 1, label: '50: x2' },
-  { level: 100, revenueMultiplier: 2, speedMultiplier: 2, label: '100: x2/s2' },
-  { level: 200, revenueMultiplier: 2, speedMultiplier: 2, label: '200: x2/s2' },
-];
-
 function getMilestoneMultipliers(level) {
   let revenue = 1;
   let speed = 1;
@@ -760,6 +972,26 @@ function getTime(racketDef, level) {
 
 function getCrewCost(racketDef) {
   return racketDef.baseCost * 10;
+}
+
+function getMaxBuy(racketDef, currentLevel, cash) {
+  let count = 0;
+  let total = 0;
+  while (true) {
+    const next = getCostForLevel(racketDef, currentLevel + count);
+    if (total + next > cash) break;
+    total += next;
+    count++;
+    if (count > 10000) break;
+  }
+  return { count: Math.max(count, 0), cost: total };
+}
+
+function formatTime(ms) {
+  const secs = ms / 1000;
+  if (secs < 60) return secs.toFixed(1) + 's';
+  if (secs < 3600) return (secs / 60).toFixed(1) + 'm';
+  return (secs / 3600).toFixed(1) + 'h';
 }
 
 function getBribeCost() {
@@ -793,6 +1025,37 @@ function notify(msg, bad = false) {
   setTimeout(() => el.remove(), 3000);
 }
 
+// ==================== SHEETS & TABS ====================
+
+let currentSheet = null;
+
+function openSheet(name) {
+  closeSheet();
+  document.getElementById('sheet-backdrop').classList.add('open');
+  document.getElementById('sheet-' + name).classList.add('open');
+  currentSheet = name;
+
+  // Highlight nav button
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('navbtn-' + name);
+  if (btn) btn.classList.add('active');
+}
+
+function closeSheet() {
+  document.getElementById('sheet-backdrop').classList.remove('open');
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
+  currentSheet = null;
+
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('navbtn-rackets').classList.add('active');
+}
+
+function switchTab(name) {
+  closeSheet();
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('navbtn-' + name).classList.add('active');
+}
+
 // ==================== RENDERING ====================
 
 function renderRackets() {
@@ -803,12 +1066,23 @@ function renderRackets() {
     const rs = state.rackets[i];
     const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
     const isFreeFirst = (i === 0 && rs.level === 0);
-    const bulkCost = isFreeFirst
-      ? 0
-      : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, state.bulkBuy));
-    const revenue = rs.level === 0
-      ? getRevenue(def, 1)
-      : getRevenue(def, rs.level);
+
+    let buyCount, bulkCost, buyLabel;
+    if (isFreeFirst) {
+      buyCount = 1; bulkCost = 0; buyLabel = 'Start Free';
+    } else if (rs.level === 0) {
+      buyCount = 1; bulkCost = getCostForLevel(def, 0); buyLabel = 'Buy \u00b7 ' + formatMoney(bulkCost);
+    } else if (state.bulkBuy === 'max') {
+      const m = getMaxBuy(def, rs.level, state.cash);
+      buyCount = m.count; bulkCost = m.cost;
+      buyLabel = buyCount > 0 ? 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost) : 'Max \u00b7 ---';
+    } else {
+      buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy);
+      buyLabel = 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost);
+    }
+
+    const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
+    const time = rs.level === 0 ? getTime(def, 1) : getTime(def, rs.level);
     const crewCost = getCrewCost(def);
 
     const iconClass = rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable';
@@ -816,26 +1090,27 @@ function renderRackets() {
       `<span class="milestone${rs.level >= m.level ? ' achieved' : ''}">${m.label}</span>`
     ).join('');
 
+    const canBuy = isFreeFirst || (unlocked && state.cash >= bulkCost && buyCount > 0);
+
     const card = document.createElement('div');
     card.className = 'racket-card' + (!unlocked ? ' locked' : '') + (rs.raided ? ' raid' : '');
     card.innerHTML = `
       <div class="racket-icon ${iconClass}" onclick="runRacket(${i})">${def.icon}</div>
       <div class="racket-info">
         <div class="racket-name">${def.name}</div>
-        <div class="racket-earnings">${rs.level > 0 ? formatMoney(revenue) + ' / run' : 'Earns ' + formatMoney(revenue) + ' / run'}</div>
-        <div class="racket-level">${rs.level > 0 ? 'Level ' + rs.level + (rs.hasCrew ? ' · Crew Active' : '') + (rs.raided ? ' · RAIDED' : '') : 'Not owned'}</div>
+        <div class="racket-earnings">${formatMoney(revenue)} / ${formatTime(time)}</div>
+        <div class="racket-level">${rs.level > 0 ? 'Lvl ' + rs.level + (rs.hasCrew ? ' \u00b7 Crew' : '') + (rs.raided ? ' \u00b7 RAIDED' : '') : 'Not owned'}</div>
         <div class="racket-milestones">${milestoneHtml}</div>
         <div class="racket-progress-outer"><div class="racket-progress-inner" id="prog-${def.id}"></div></div>
       </div>
       <div class="racket-actions">
-        <button class="btn-upgrade" onclick="buyRacket(${i})"
-          ${(state.cash < bulkCost && !isFreeFirst) || !unlocked ? 'disabled' : ''}>
-          ${isFreeFirst ? 'Start Free' : (rs.level === 0 ? 'Buy' : 'x' + state.bulkBuy) + ' · ' + formatMoney(bulkCost)}
+        <button class="btn-upgrade" onclick="buyRacket(${i})" ${!canBuy ? 'disabled' : ''}>
+          ${buyLabel}
         </button>
         ${rs.level > 0 && !rs.hasCrew ? `
           <button class="btn-crew" onclick="hireCrew(${i})"
             ${state.cash < crewCost ? 'disabled' : ''}>
-            Crew · ${formatMoney(crewCost)}
+            Crew \u00b7 ${formatMoney(crewCost)}
           </button>
         ` : ''}
       </div>
@@ -844,17 +1119,32 @@ function renderRackets() {
   });
 }
 
+function renderRankList() {
+  const list = document.getElementById('rank-list');
+  const rankIdx = getCurrentRankIndex();
+  list.innerHTML = RANKS.map((r, i) => {
+    const cls = i < rankIdx ? 'achieved' : i === rankIdx ? 'current' : '';
+    return `
+      <div class="rank-item ${cls}">
+        <div class="rank-badge">${i + 1}</div>
+        <div class="rank-item-info">
+          <div class="rank-item-name">${r.name}</div>
+          <div class="rank-item-req">${r.totalEarned > 0 ? formatMoney(r.totalEarned) + ' total earned' : 'Starting rank'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function updateUI() {
   document.getElementById('cash-display').textContent = formatMoney(state.cash);
 
-  // Calculate DPS
+  // DPS
   let dps = 0;
   RACKETS.forEach((def, i) => {
     const rs = state.rackets[i];
     if (rs.level > 0 && rs.hasCrew && !rs.raided) {
-      const rev = getRevenue(def, rs.level);
-      const time = getTime(def, rs.level);
-      dps += rev / (time / 1000);
+      dps += getRevenue(def, rs.level) / (getTime(def, rs.level) / 1000);
     }
   });
   document.getElementById('dps-display').textContent = formatMoney(dps);
@@ -866,15 +1156,15 @@ function updateUI() {
 
   const bribeCost = getBribeCost();
   const brideBtn = document.getElementById('bribe-btn');
-  brideBtn.textContent = `Bribe · ${formatMoney(bribeCost)}`;
+  brideBtn.textContent = `Bribe \u00b7 ${formatMoney(bribeCost)}`;
   brideBtn.disabled = state.cash < bribeCost || state.heat <= 0;
 
   // Rank
   const rankIdx = getCurrentRankIndex();
   const rank = RANKS[rankIdx];
   const nextRank = RANKS[rankIdx + 1];
-  document.getElementById('rank-name').textContent = rank.name;
   document.getElementById('current-rank-name').textContent = rank.name;
+  document.getElementById('rank-nav-label').textContent = rank.name;
 
   if (nextRank) {
     const progress = (state.totalEarned - rank.totalEarned) / (nextRank.totalEarned - rank.totalEarned);
@@ -890,9 +1180,9 @@ function updateUI() {
   document.getElementById('omerta-display').textContent = state.omertaPoints;
   document.getElementById('omerta-mult').textContent = getOmertaMultiplier().toFixed(2);
   const pBtn = document.getElementById('prestige-btn');
-  const canPrestige = rankIdx >= 5 && gain > 0; // Requires Don
+  const canPrestige = rankIdx >= 5 && gain > 0;
   pBtn.disabled = !canPrestige;
-  pBtn.textContent = canPrestige ? `Reset for +${gain} Omertà Points` : 'Requires Don Rank';
+  pBtn.textContent = canPrestige ? `Reset for +${gain} Omert\u00e0 Points` : 'Requires Underboss Rank';
 
   // Stats
   document.getElementById('stat-total-earned').textContent = formatMoney(state.lifetimeEarned);
@@ -901,12 +1191,27 @@ function updateUI() {
   document.getElementById('stat-raids').textContent = state.timesRaided;
   document.getElementById('stat-prestiges').textContent = state.prestiges;
 
-  // Update button states
+  // Update racket card button states
   RACKETS.forEach((def, i) => {
     const rs = state.rackets[i];
     const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
     const isFreeFirst = (i === 0 && rs.level === 0);
-    const bulkCost = isFreeFirst ? 0 : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, state.bulkBuy));
+
+    let buyCount, bulkCost, buyLabel;
+    if (isFreeFirst) {
+      buyCount = 1; bulkCost = 0; buyLabel = 'Start Free';
+    } else if (rs.level === 0) {
+      buyCount = 1; bulkCost = getCostForLevel(def, 0); buyLabel = 'Buy \u00b7 ' + formatMoney(bulkCost);
+    } else if (state.bulkBuy === 'max') {
+      const m = getMaxBuy(def, rs.level, state.cash);
+      buyCount = m.count; bulkCost = m.cost;
+      buyLabel = buyCount > 0 ? 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost) : 'Max \u00b7 ---';
+    } else {
+      buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy);
+      buyLabel = 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost);
+    }
+
+    const canBuy = isFreeFirst || (unlocked && state.cash >= bulkCost && buyCount > 0);
 
     const card = document.querySelectorAll('.racket-card')[i];
     if (!card) return;
@@ -918,20 +1223,27 @@ function updateUI() {
       icon.className = 'racket-icon ' + (rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable');
     }
 
+    // Update earnings with time
+    const earningsEl = card.querySelector('.racket-earnings');
+    if (earningsEl) {
+      const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
+      const time = rs.level === 0 ? getTime(def, 1) : getTime(def, rs.level);
+      earningsEl.textContent = formatMoney(revenue) + ' / ' + formatTime(time);
+    }
+
     const upgradeBtn = card.querySelector('.btn-upgrade');
     if (upgradeBtn) {
-      upgradeBtn.disabled = (state.cash < bulkCost && !isFreeFirst) || !unlocked;
-      upgradeBtn.textContent = isFreeFirst ? 'Start Free' : `${rs.level === 0 ? 'Buy' : 'x' + state.bulkBuy} · ${formatMoney(bulkCost)}`;
+      upgradeBtn.disabled = !canBuy;
+      upgradeBtn.textContent = buyLabel;
     }
 
     const crewBtn = card.querySelector('.btn-crew');
     if (crewBtn) {
       const crewCost = getCrewCost(def);
       crewBtn.disabled = state.cash < crewCost;
-      crewBtn.textContent = `Crew · ${formatMoney(crewCost)}`;
+      crewBtn.textContent = `Crew \u00b7 ${formatMoney(crewCost)}`;
     }
 
-    // Update milestones
     const milestones = card.querySelectorAll('.milestone');
     MILESTONES.forEach((m, mi) => {
       if (milestones[mi]) milestones[mi].classList.toggle('achieved', rs.level >= m.level);
@@ -944,11 +1256,21 @@ function updateUI() {
 function buyRacket(index) {
   const def = RACKETS[index];
   const rs = state.rackets[index];
-  const count = rs.level === 0 ? 1 : state.bulkBuy;
   const isFreeFirst = (index === 0 && rs.level === 0);
-  const cost = isFreeFirst ? 0 : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, count));
 
-  if (state.cash < cost) return;
+  let count, cost;
+  if (isFreeFirst) {
+    count = 1; cost = 0;
+  } else if (rs.level === 0) {
+    count = 1; cost = getCostForLevel(def, 0);
+  } else if (state.bulkBuy === 'max') {
+    const m = getMaxBuy(def, rs.level, state.cash);
+    count = m.count; cost = m.cost;
+  } else {
+    count = state.bulkBuy; cost = getBulkCost(def, rs.level, count);
+  }
+
+  if (count <= 0 || (state.cash < cost && !isFreeFirst)) return;
   state.cash -= cost;
   rs.level += count;
 
@@ -989,7 +1311,8 @@ function bribeCops() {
 function setBulk(n) {
   state.bulkBuy = n;
   document.querySelectorAll('.bulk-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent === 'x' + n);
+    const match = n === 'max' ? btn.textContent === 'Max' : btn.textContent === 'x' + n;
+    btn.classList.toggle('active', match);
   });
   renderRackets();
 }
@@ -998,7 +1321,7 @@ function prestige() {
   const gain = getPrestigeGain();
   const rankIdx = getCurrentRankIndex();
   if (rankIdx < 5 || gain <= 0) return;
-  if (!confirm(`Go to the mattresses? You'll lose all cash and rackets but gain ${gain} Omertà Points.`)) return;
+  if (!confirm(`Go to the mattresses? You'll lose all cash and rackets but gain ${gain} Omert\u00e0 Points.`)) return;
 
   state.omertaPoints += gain;
   state.prestiges++;
@@ -1006,14 +1329,15 @@ function prestige() {
   Object.assign(state, getDefaultState());
   Object.assign(state, saved);
 
-  notify(`Reborn with ${state.omertaPoints} Omertà Points (x${getOmertaMultiplier().toFixed(2)} income)`);
+  notify(`Reborn with ${state.omertaPoints} Omert\u00e0 Points (x${getOmertaMultiplier().toFixed(2)} income)`);
+  closeSheet();
   renderRackets();
+  renderRankList();
 }
 
 // ==================== RAID SYSTEM ====================
 
 function triggerRaid() {
-  // Pick a random active racket to raid
   const active = state.rackets
     .map((rs, i) => ({ rs, i }))
     .filter(({ rs }) => rs.level > 0 && !rs.raided);
@@ -1026,7 +1350,6 @@ function triggerRaid() {
   target.rs.progress = 0;
   state.timesRaided++;
 
-  // Raid flash
   const overlay = document.createElement('div');
   overlay.className = 'raid-overlay';
   document.body.appendChild(overlay);
@@ -1034,7 +1357,6 @@ function triggerRaid() {
 
   notify(`RAID! ${RACKETS[target.i].name} shut down!`, true);
 
-  // Raid clears after some time
   setTimeout(() => {
     target.rs.raided = false;
     state.heat = Math.max(0, state.heat - 15);
@@ -1054,7 +1376,6 @@ function gameLoop(now) {
   const dt = now - lastTick;
   lastTick = now;
 
-  // Update racket progress
   RACKETS.forEach((def, i) => {
     const rs = state.rackets[i];
     if (!rs.running || rs.level === 0 || rs.raided) return;
@@ -1063,24 +1384,21 @@ function gameLoop(now) {
     rs.progress += dt;
 
     if (rs.progress >= totalTime) {
-      // Complete the run
       const revenue = getRevenue(def, rs.level);
       state.cash += revenue;
       state.totalEarned += revenue;
       state.lifetimeEarned += revenue;
 
-      // Heat
       state.heat = Math.min(100, state.heat + def.heatPerRun);
 
       if (rs.hasCrew) {
-        rs.progress = rs.progress - totalTime; // carry over
+        rs.progress = rs.progress - totalTime;
       } else {
         rs.running = false;
         rs.progress = 0;
       }
     }
 
-    // Update progress bar
     const progBar = document.getElementById('prog-' + def.id);
     if (progBar) {
       const pct = Math.min(100, (rs.progress / getTime(def, rs.level)) * 100);
@@ -1088,12 +1406,10 @@ function gameLoop(now) {
     }
   });
 
-  // Natural heat decay
   if (state.heat > 0) {
     state.heat = Math.max(0, state.heat - 0.02 * (dt / 1000));
   }
 
-  // Random raid check
   if (state.heat > 50 && Math.random() < (state.heat / 100) * 0.0005 * (dt / 16)) {
     triggerRaid();
   }
@@ -1102,11 +1418,10 @@ function gameLoop(now) {
   requestAnimationFrame(gameLoop);
 }
 
-// ==================== NEWS TICKER ====================
+// ==================== NEWS ====================
 
 function rotateNews() {
-  const el = document.getElementById('news-text');
-  el.textContent = NEWS[Math.floor(Math.random() * NEWS.length)];
+  document.getElementById('news-text').textContent = NEWS[Math.floor(Math.random() * NEWS.length)];
 }
 setInterval(rotateNews, 12000);
 
@@ -1122,45 +1437,36 @@ function loadGame() {
   if (!data) return false;
   try {
     const loaded = JSON.parse(data);
-    // Merge with defaults to handle new fields
     const def = getDefaultState();
     Object.assign(def, loaded);
-    // Ensure racket array is correct length
     while (def.rackets.length < RACKETS.length) {
       def.rackets.push({ id: RACKETS[def.rackets.length].id, level: 0, hasCrew: false, running: false, progress: 0, raided: false });
     }
     state = def;
-
-    // Restart automated rackets
     state.rackets.forEach(rs => {
-      if (rs.hasCrew && rs.level > 0 && !rs.raided) {
-        rs.running = true;
-      }
-      rs.raided = false; // clear raids on load
+      if (rs.hasCrew && rs.level > 0 && !rs.raided) rs.running = true;
+      rs.raided = false;
     });
-
     return true;
-  } catch(e) {
-    return false;
-  }
+  } catch(e) { return false; }
 }
 
 function resetGame() {
   localStorage.removeItem('mademan_save');
   state = getDefaultState();
   renderRackets();
+  renderRankList();
   notify('All progress reset.');
 }
 
-// Auto-save every 30s
 setInterval(saveGame, 30000);
 
 // ==================== INIT ====================
 
 loadGame();
 renderRackets();
+renderRankList();
 requestAnimationFrame(gameLoop);
 </script>
-
 </body>
 </html>
