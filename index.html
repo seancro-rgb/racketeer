@@ -214,6 +214,21 @@
   .nav-btn:last-child { border-right: none; }
   .nav-btn.active { color: var(--gold); background: rgba(212,165,74,0.08); }
   .nav-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-btn { position: relative; }
+
+  .nav-alert {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 24px);
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    display: none;
+    border: 1px solid #111118;
+  }
+
+  .nav-alert.visible { display: block; }
 
   /* ============ MAIN SCROLL AREA ============ */
   #main-scroll {
@@ -324,21 +339,38 @@
   .racket-earnings { font-size: 11px; color: var(--gold-dim); }
   .racket-level { font-size: 10px; color: var(--text-dim); }
 
-  .racket-milestones { display: flex; gap: 3px; margin-top: 3px; flex-wrap: wrap; }
-
-  .milestone {
-    font-size: 8px;
-    padding: 1px 3px;
-    border-radius: 3px;
-    background: #1a1a2e;
-    color: var(--text-dim);
-    border: 1px solid var(--border);
+  .racket-icon-wrap {
+    position: relative;
+    flex-shrink: 0;
   }
 
-  .milestone.achieved {
-    background: rgba(212,165,74,0.15);
-    color: var(--gold);
+  .milestone-badges {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+  }
+
+  .ms-badge {
+    display: none;
+    align-items: center;
+    gap: 1px;
+    font-size: 7px;
+    font-weight: 700;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0 3px;
+    line-height: 14px;
+    color: var(--text-dim);
+  }
+
+  .ms-badge.active {
+    display: flex;
     border-color: var(--gold-dim);
+    color: var(--gold);
   }
 
   .racket-progress-outer {
@@ -354,7 +386,7 @@
     background: var(--gold);
     border-radius: 3px;
     width: 0%;
-    transition: width 0.05s linear;
+    transition: none;
   }
 
   .racket-actions {
@@ -368,12 +400,29 @@
     background: transparent;
     color: var(--gold);
     border: 1px solid var(--gold-dim);
-    padding: 6px 10px;
+    padding: 6px 4px;
     border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
+    width: 72px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    line-height: 1.2;
+  }
+
+  .btn-upgrade .buy-label {
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .btn-upgrade .buy-price {
+    font-size: 9px;
+    opacity: 0.8;
   }
 
   .btn-upgrade:hover { background: rgba(212,165,74,0.1); }
@@ -393,21 +442,6 @@
 
   .btn-crew:hover { background: rgba(39,174,96,0.1); }
   .btn-crew:disabled { opacity: 0.4; cursor: default; }
-
-  .btn-skill {
-    background: transparent;
-    color: var(--purple);
-    border: 1px solid var(--purple);
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .btn-skill:hover { background: rgba(142,68,173,0.1); }
-  .btn-skill:disabled { opacity: 0.4; cursor: default; }
 
   /* ============ BOTTOM SHEET ============ */
   .sheet-backdrop {
@@ -909,7 +943,7 @@
 <div id="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('rackets')" id="navbtn-rackets">Rackets</button>
   <button class="nav-btn" onclick="openSheet('rank')" id="navbtn-rank" style="flex-direction:column;gap:0;line-height:1.3;">Rank<span id="rank-nav-label" style="font-size:8px;opacity:0.6;letter-spacing:0.5px;">Street Punk</span></button>
-  <button class="nav-btn" onclick="openSheet('crew')" id="navbtn-crew">Crew</button>
+  <button class="nav-btn" onclick="openSheet('crew')" id="navbtn-crew">Crew<span class="nav-alert" id="crew-alert"></span></button>
   <button class="nav-btn" onclick="openSheet('prestige')" id="navbtn-prestige">Prestige</button>
   <button class="nav-btn" onclick="openSheet('stats')" id="navbtn-stats">Stats</button>
 </div>
@@ -977,7 +1011,7 @@
 // ==================== GAME DATA ====================
 
 const RACKETS = [
-  { id: 'pickpocket',   name: 'Pickpocketing',       icon: '\u{1F90F}', baseCost: 4,         baseRevenue: 1,          baseTime: 1000,  heatPerRun: 0.1,  unlockCost: 0 },
+  { id: 'pickpocket',   name: 'Pickpocketing',       icon: '\u{1F90F}', baseCost: 4,         baseRevenue: 1,          baseTime: 1500,  heatPerRun: 0.1,  unlockCost: 0 },
   { id: 'numbers',      name: 'Numbers Racket',      icon: '\u{1F3B2}', baseCost: 60,        baseRevenue: 8,          baseTime: 3000,  heatPerRun: 0.3,  unlockCost: 50 },
   { id: 'protection',   name: 'Protection Racket',   icon: '\u{1F44A}', baseCost: 720,       baseRevenue: 54,         baseTime: 6000,  heatPerRun: 0.6,  unlockCost: 500 },
   { id: 'bootlegging',  name: 'Bootlegging',         icon: '\u{1F943}', baseCost: 8640,      baseRevenue: 432,        baseTime: 12000, heatPerRun: 1.0,  unlockCost: 5000 },
@@ -1027,27 +1061,32 @@ const MILESTONES = [
 ];
 
 // Named crew members with unique perks
+// Crew members ordered by racket (matching RACKETS order), then global members at the end
 const CREW_MEMBERS = [
-  { id: 'vinny',   name: 'Vinny the Wheelman',  perk: '+25% speed on Bootlegging',     racket: 'bootlegging', speedBonus: 0.25, revenueBonus: 0, heatBonus: 0, cost: 5000 },
-  { id: 'tony',    name: 'Big Tony',             perk: '+30% revenue on Protection',    racket: 'protection',  speedBonus: 0, revenueBonus: 0.3, heatBonus: 0, cost: 3000 },
-  { id: 'silk',    name: 'Silk Hand Sal',        perk: '+40% revenue on Pickpocketing', racket: 'pickpocket',  speedBonus: 0, revenueBonus: 0.4, heatBonus: 0, cost: 500 },
-  { id: 'maria',   name: 'Maria the Fixer',      perk: '-30% heat from all rackets',    racket: null,          speedBonus: 0, revenueBonus: 0, heatBonus: -0.3, cost: 50000 },
-  { id: 'frankie', name: 'Frankie Numbers',      perk: '+35% revenue on Numbers',       racket: 'numbers',     speedBonus: 0, revenueBonus: 0.35, heatBonus: 0, cost: 2000 },
-  { id: 'louie',   name: 'Louie Knuckles',       perk: '+20% speed on Loan Sharking',   racket: 'loansharking', speedBonus: 0.2, revenueBonus: 0, heatBonus: 0, cost: 100000 },
-  { id: 'nina',    name: 'Nina Nightshade',      perk: '+30% revenue on Nightclub',     racket: 'nightclub',   speedBonus: 0, revenueBonus: 0.3, heatBonus: 0, cost: 5e7 },
-  { id: 'carlo',   name: 'Carlo the Chemist',    perk: '+25% speed on Drug Op',         racket: 'drugs',       speedBonus: 0.25, revenueBonus: 0, heatBonus: 0, cost: 5e8 },
-  { id: 'judge',   name: 'Judge Morrison',       perk: '-50% heat from City Hall',      racket: 'cityhall',    speedBonus: 0, revenueBonus: 0, heatBonus: -0.5, cost: 5e11 },
-  { id: 'accountant', name: 'The Accountant',    perk: '+20% revenue on ALL rackets',   racket: null,          speedBonus: 0, revenueBonus: 0.2, heatBonus: 0, cost: 1e9 },
+  { id: 'silk',    name: 'Silk Hand Sal',        perk: 'Automates Pickpocketing',       racket: 'pickpocket',   speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'frankie', name: 'Frankie Numbers',      perk: 'Automates Numbers Racket',      racket: 'numbers',      speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'tony',    name: 'Big Tony',             perk: 'Automates Protection Racket',   racket: 'protection',   speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'vinny',   name: 'Vinny the Wheelman',   perk: 'Automates Bootlegging',         racket: 'bootlegging',  speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'louie',   name: 'Louie Knuckles',       perk: 'Automates Loan Sharking',       racket: 'loansharking', speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'jimmy',   name: 'Jimmy the Wrench',     perk: 'Automates Chop Shop',           racket: 'chopshop',     speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'lucky',   name: 'Lucky Luca',           perk: 'Automates Underground Casino',  racket: 'casino',       speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'nina',    name: 'Nina Nightshade',      perk: 'Automates Nightclub',           racket: 'nightclub',    speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'carlo',   name: 'Carlo the Chemist',    perk: 'Automates Drug Operation',      racket: 'drugs',        speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'soap',    name: 'Soapy Pete',           perk: 'Automates Money Laundering',    racket: 'laundering',   speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'docker',  name: 'Dock Boss Murphy',     perk: 'Automates The Docks',           racket: 'docks',        speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'judge',   name: 'Judge Morrison',       perk: 'Automates City Hall',           racket: 'cityhall',     speedBonus: 0, revenueBonus: 0, heatBonus: 0, automates: true },
+  { id: 'maria',   name: 'Maria the Fixer',      perk: '\u221230% heat from all',       racket: null,           speedBonus: 0, revenueBonus: 0, heatBonus: -0.3, automates: false, cost: 50000 },
+  { id: 'accountant', name: 'The Accountant',    perk: '+20% revenue on ALL',           racket: null,           speedBonus: 0, revenueBonus: 0.2, heatBonus: 0, automates: false, cost: 1e9 },
 ];
 
 // Upgrade trees per racket (3 upgrades each for first 6 rackets)
 const UPGRADES = {};
 RACKETS.forEach(r => {
   UPGRADES[r.id] = [
-    { id: r.id+'_rev1',  name: 'Better Operation',   desc: 'x2 revenue',          cost: r.baseCost * 50,   revMult: 2, spdMult: 1 },
-    { id: r.id+'_spd1',  name: 'Streamlined Process', desc: 'x2 speed',           cost: r.baseCost * 100,  revMult: 1, spdMult: 2 },
-    { id: r.id+'_rev2',  name: 'Expert Crew',         desc: 'x3 revenue',          cost: r.baseCost * 500,  revMult: 3, spdMult: 1 },
-    { id: r.id+'_heat1', name: 'Cover Story',         desc: '-50% heat per run',   cost: r.baseCost * 200,  revMult: 1, spdMult: 1, heatMult: 0.5 },
+    { id: r.id+'_rev1',  name: 'Better Operation',   desc: 'x2 revenue',          cost: r.baseCost * 500,    revMult: 2, spdMult: 1 },
+    { id: r.id+'_spd1',  name: 'Streamlined Process', desc: 'x2 speed',           cost: r.baseCost * 1000,   revMult: 1, spdMult: 2 },
+    { id: r.id+'_heat1', name: 'Cover Story',         desc: '-50% heat per run',   cost: r.baseCost * 2500,   revMult: 1, spdMult: 1, heatMult: 0.5 },
+    { id: r.id+'_rev2',  name: 'Expert Crew',         desc: 'x3 revenue',          cost: r.baseCost * 10000,  revMult: 3, spdMult: 1 },
   ];
 });
 
@@ -1148,7 +1187,7 @@ function formatMoney(n) {
 }
 
 function getCostForLevel(racketDef, currentLevel) {
-  return racketDef.baseCost * Math.pow(1.15, currentLevel);
+  return Math.ceil(racketDef.baseCost * Math.pow(1.15, currentLevel));
 }
 
 function getBulkCost(racketDef, currentLevel, count) {
@@ -1324,36 +1363,40 @@ function renderRackets() {
     const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
     const isFreeFirst = (i === 0 && rs.level === 0);
 
-    let buyCount, bulkCost, buyLabel;
-    if (isFreeFirst) { buyCount = 1; bulkCost = 0; buyLabel = 'Start Free'; }
-    else if (rs.level === 0) { buyCount = 1; bulkCost = getCostForLevel(def, 0); buyLabel = 'Buy \u00b7 ' + formatMoney(bulkCost); }
-    else if (state.bulkBuy === 'max') { const m = getMaxBuy(def, rs.level, state.cash); buyCount = m.count; bulkCost = m.cost; buyLabel = buyCount > 0 ? 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost) : 'Max \u00b7 ---'; }
-    else { buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy); buyLabel = 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost); }
+    let buyCount, bulkCost, buyTop, buyBot;
+    if (isFreeFirst) { buyCount = 1; bulkCost = 0; buyTop = 'Buy'; buyBot = 'Free'; }
+    else if (rs.level === 0) { buyCount = 1; bulkCost = getCostForLevel(def, 0); buyTop = 'Buy'; buyBot = formatMoney(bulkCost); }
+    else if (state.bulkBuy === 'max') { const m = getMaxBuy(def, rs.level, state.cash); buyCount = m.count; bulkCost = m.cost; buyTop = buyCount > 0 ? 'x' + buyCount : 'Max'; buyBot = buyCount > 0 ? formatMoney(bulkCost) : '---'; }
+    else { buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy); buyTop = 'x' + buyCount; buyBot = formatMoney(bulkCost); }
 
     const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
     const time = rs.level === 0 ? getTime(def, 1) : getTime(def, rs.level);
     const crewCost = getCrewCost(def);
     const iconClass = rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable';
-    const milestoneHtml = MILESTONES.map(m => `<span class="milestone${rs.level >= m.level ? ' achieved' : ''}">${m.label}</span>`).join('');
+    const { revenue: mRev, speed: mSpd } = getMilestoneMultipliers(rs.level);
+    const revLabel = mRev > 1 ? '\u{1F4B2}x' + mRev : '';
+    const spdLabel = mSpd > 1 ? '\u{26A1}x' + mSpd : '';
     const canBuy = isFreeFirst || (unlocked && state.cash >= bulkCost && buyCount > 0);
-    const hasUpgrades = (UPGRADES[def.id] || []).some(u => !state.upgradesPurchased.includes(u.id));
 
     const card = document.createElement('div');
     card.className = 'racket-card' + (!unlocked ? ' locked' : '') + (rs.raided ? ' raid' : '');
     card.innerHTML = `
-      <div class="racket-icon ${iconClass}" onclick="runRacket(${i})">${def.icon}</div>
+      <div class="racket-icon-wrap">
+        <div class="racket-icon ${iconClass}" onclick="runRacket(${i})">${def.icon}</div>
+        <div class="milestone-badges">
+          <span class="ms-badge${revLabel ? ' active' : ''}" id="ms-rev-${def.id}">${revLabel}</span>
+          <span class="ms-badge${spdLabel ? ' active' : ''}" id="ms-spd-${def.id}">${spdLabel}</span>
+        </div>
+      </div>
       <div class="racket-info">
         <div class="racket-name">${def.name}</div>
         <div class="racket-earnings">${formatMoney(revenue)} / ${formatTime(time)}</div>
         <div class="racket-level">${rs.level > 0 ? 'Lvl ' + rs.level + (rs.hasCrew ? ' \u00b7 Crew' : '') + (rs.raided ? ' \u00b7 RAIDED' : '') : 'Not owned'}</div>
-        <div class="racket-milestones">${milestoneHtml}</div>
         <div class="racket-progress-outer"><div class="racket-progress-inner" id="prog-${def.id}"></div></div>
       </div>
       <div class="racket-actions">
-        <button class="btn-upgrade" onclick="buyRacket(${i})" ${!canBuy ? 'disabled' : ''}>${buyLabel}</button>
-        ${rs.level > 0 && !rs.hasCrew && rs.crewArrested ? `<button class="btn-crew" onclick="bailCrew(${i})" style="color:var(--red);border-color:var(--red);" ${state.cash < getBailCost(def) ? 'disabled' : ''}>Bail \u00b7 ${formatMoney(getBailCost(def))}</button>`
-          : rs.level > 0 && !rs.hasCrew ? `<button class="btn-crew" onclick="hireCrew(${i})" ${state.cash < crewCost ? 'disabled' : ''}>Crew \u00b7 ${formatMoney(crewCost)}</button>` : ''}
-        ${rs.level > 0 && hasUpgrades ? `<button class="btn-skill" onclick="openUpgrades('${def.id}')">Upgrades</button>` : ''}
+        <button class="btn-upgrade" onclick="buyRacket(${i})" ${!canBuy ? 'disabled' : ''}><span class="buy-label">${buyTop}</span><span class="buy-price">${buyBot}</span></button>
+        ${rs.level > 0 && !rs.hasCrew && rs.crewArrested ? `<button class="btn-crew" onclick="bailCrew(${i})" style="color:var(--red);border-color:var(--red);" ${state.cash < getBailCost(def) ? 'disabled' : ''}>Bail \u00b7 ${formatMoney(getBailCost(def))}</button>` : ''}
       </div>
     `;
     list.appendChild(card);
@@ -1369,20 +1412,58 @@ function renderRankList() {
   }).join('');
 }
 
+function getCrewMemberCost(cm) {
+  if (cm.cost) return cm.cost; // global crew members have fixed cost
+  const racketDef = RACKETS.find(r => r.id === cm.racket);
+  return racketDef ? getCrewCost(racketDef) : 0;
+}
+
 function renderCrewList() {
   const list = document.getElementById('crew-list');
-  list.innerHTML = CREW_MEMBERS.map(cm => {
+  let html = '';
+
+  // Crew members
+  html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Crew</div>';
+  html += CREW_MEMBERS.map(cm => {
     const owned = state.crewOwned.includes(cm.id);
-    return `<div class="crew-card${owned ? ' assigned' : ''}">
+    const cost = getCrewMemberCost(cm);
+    const racketDef = cm.racket ? RACKETS.find(r => r.id === cm.racket) : null;
+    const racketState = racketDef ? state.rackets[RACKETS.indexOf(racketDef)] : null;
+    const racketOwned = !racketDef || (racketState && racketState.level > 0);
+    const locked = cm.automates && !racketOwned;
+
+    return `<div class="crew-card${owned ? ' assigned' : ''}" style="${locked ? 'opacity:0.35;pointer-events:none;' : ''}">
       <div class="crew-header">
         <span class="crew-name">${cm.name}</span>
         <span class="crew-perk">${cm.perk}</span>
       </div>
-      <button class="crew-assign-btn${owned ? ' active' : ''}" onclick="buyCrew('${cm.id}')" ${owned || state.cash < cm.cost ? 'disabled' : ''}>
-        ${owned ? 'Recruited' : 'Recruit \u00b7 ' + formatMoney(cm.cost)}
+      ${racketDef ? `<div class="crew-desc">${racketDef.icon} ${racketDef.name}</div>` : `<div class="crew-desc">Applies to all rackets</div>`}
+      <button class="crew-assign-btn${owned ? ' active' : ''}" onclick="buyCrew('${cm.id}')" ${owned || state.cash < cost ? 'disabled' : ''}>
+        ${owned ? 'Recruited' : 'Recruit \u00b7 ' + formatMoney(cost)}
       </button>
     </div>`;
   }).join('');
+
+  // Upgrades per owned racket
+  const ownedRackets = RACKETS.filter((r, i) => state.rackets[i].level > 0);
+  if (ownedRackets.length > 0) {
+    html += '<div style="font-size:12px;color:var(--text-dim);margin:16px 0 8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Upgrades</div>';
+    ownedRackets.forEach(r => {
+      const ups = UPGRADES[r.id] || [];
+      const available = ups.filter(u => !state.upgradesPurchased.includes(u.id));
+      if (available.length === 0) return;
+      html += `<div style="font-size:12px;font-weight:700;margin:10px 0 4px;">${r.icon} ${r.name}</div>`;
+      html += available.map(u => `<div class="upgrade-item">
+        <div class="upgrade-info">
+          <div class="upgrade-name">${u.name}</div>
+          <div class="upgrade-desc">${u.desc}</div>
+        </div>
+        <button class="upgrade-buy-btn" onclick="buyUpgrade('${u.id}','${r.id}')" ${state.cash < u.cost ? 'disabled' : ''}>${formatMoney(u.cost)}</button>
+      </div>`).join('');
+    });
+  }
+
+  list.innerHTML = html;
 }
 
 function updateUI() {
@@ -1436,17 +1517,28 @@ function updateUI() {
   document.getElementById('stat-prestiges').textContent = state.prestiges;
   document.getElementById('stat-events').textContent = state.eventsCompleted;
 
+  // Crew alert badge — show when any crew member is affordable and not yet owned
+  const canBuyCrew = CREW_MEMBERS.some(cm => {
+    if (state.crewOwned.includes(cm.id)) return false;
+    if (cm.automates && cm.racket) {
+      const ri = RACKETS.findIndex(r => r.id === cm.racket);
+      if (ri < 0 || state.rackets[ri].level === 0) return false;
+    }
+    return state.cash >= getCrewMemberCost(cm);
+  });
+  document.getElementById('crew-alert').classList.toggle('visible', canBuyCrew);
+
   // Update racket card states inline
   RACKETS.forEach((def, i) => {
     const rs = state.rackets[i];
     const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
     const isFreeFirst = (i === 0 && rs.level === 0);
 
-    let buyCount, bulkCost, buyLabel;
-    if (isFreeFirst) { buyCount = 1; bulkCost = 0; buyLabel = 'Start Free'; }
-    else if (rs.level === 0) { buyCount = 1; bulkCost = getCostForLevel(def, 0); buyLabel = 'Buy \u00b7 ' + formatMoney(bulkCost); }
-    else if (state.bulkBuy === 'max') { const m = getMaxBuy(def, rs.level, state.cash); buyCount = m.count; bulkCost = m.cost; buyLabel = buyCount > 0 ? 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost) : 'Max \u00b7 ---'; }
-    else { buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy); buyLabel = 'x' + buyCount + ' \u00b7 ' + formatMoney(bulkCost); }
+    let buyCount, bulkCost, buyTop, buyBot;
+    if (isFreeFirst) { buyCount = 1; bulkCost = 0; buyTop = 'Buy'; buyBot = 'Free'; }
+    else if (rs.level === 0) { buyCount = 1; bulkCost = getCostForLevel(def, 0); buyTop = 'Buy'; buyBot = formatMoney(bulkCost); }
+    else if (state.bulkBuy === 'max') { const m = getMaxBuy(def, rs.level, state.cash); buyCount = m.count; bulkCost = m.cost; buyTop = buyCount > 0 ? 'x' + buyCount : 'Max'; buyBot = buyCount > 0 ? formatMoney(bulkCost) : '---'; }
+    else { buyCount = state.bulkBuy; bulkCost = getBulkCost(def, rs.level, state.bulkBuy); buyTop = 'x' + buyCount; buyBot = formatMoney(bulkCost); }
     const canBuy = isFreeFirst || (unlocked && state.cash >= bulkCost && buyCount > 0);
 
     const card = document.querySelectorAll('.racket-card')[i];
@@ -1457,6 +1549,13 @@ function updateUI() {
     const icon = card.querySelector('.racket-icon');
     if (icon) icon.className = 'racket-icon ' + (rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable');
 
+    // Update milestone badges
+    const { revenue: mRev, speed: mSpd } = getMilestoneMultipliers(rs.level);
+    const msRevEl = document.getElementById('ms-rev-' + def.id);
+    const msSpdEl = document.getElementById('ms-spd-' + def.id);
+    if (msRevEl) { msRevEl.classList.toggle('active', mRev > 1); msRevEl.textContent = mRev > 1 ? '\u{1F4B2}x' + mRev : ''; }
+    if (msSpdEl) { msSpdEl.classList.toggle('active', mSpd > 1); msSpdEl.textContent = mSpd > 1 ? '\u{26A1}x' + mSpd : ''; }
+
     const earningsEl = card.querySelector('.racket-earnings');
     if (earningsEl) {
       const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
@@ -1465,40 +1564,44 @@ function updateUI() {
     }
 
     const upgradeBtn = card.querySelector('.btn-upgrade');
-    if (upgradeBtn) { upgradeBtn.disabled = !canBuy; upgradeBtn.textContent = buyLabel; }
-
-    const crewBtn = card.querySelector('.btn-crew');
-    if (crewBtn) {
-      if (rs.crewArrested) { const bail = getBailCost(def); crewBtn.disabled = state.cash < bail; crewBtn.textContent = `Bail \u00b7 ${formatMoney(bail)}`; }
-      else { const cc = getCrewCost(def); crewBtn.disabled = state.cash < cc; crewBtn.textContent = `Crew \u00b7 ${formatMoney(cc)}`; }
+    if (upgradeBtn) {
+      upgradeBtn.disabled = !canBuy;
+      const lbl = upgradeBtn.querySelector('.buy-label');
+      const prc = upgradeBtn.querySelector('.buy-price');
+      if (lbl) lbl.textContent = buyTop;
+      if (prc) prc.textContent = buyBot;
     }
 
-    const milestones = card.querySelectorAll('.milestone');
-    MILESTONES.forEach((m, mi) => { if (milestones[mi]) milestones[mi].classList.toggle('achieved', rs.level >= m.level); });
+    const crewBtn = card.querySelector('.btn-crew');
+    if (crewBtn && rs.crewArrested) {
+      const bail = getBailCost(def);
+      crewBtn.disabled = state.cash < bail;
+      crewBtn.textContent = `Bail \u00b7 ${formatMoney(bail)}`;
+    }
+
+
   });
 
-  // Update upgrade buttons if sheet is open
-  if (currentSheet === 'upgrades' && _currentUpgradeRacket) {
-    document.querySelectorAll('.upgrade-buy-btn').forEach(btn => {
-      const ups = UPGRADES[_currentUpgradeRacket] || [];
-      const u = ups.find(x => btn.onclick && btn.textContent.trim() === formatMoney(x.cost));
-      // Simpler: just re-enable/disable all non-owned upgrade buttons based on cash
-      const costText = btn.textContent.trim();
-      for (const uu of ups) {
-        if (formatMoney(uu.cost) === costText && !state.upgradesPurchased.includes(uu.id)) {
-          btn.disabled = state.cash < uu.cost;
+  // Update crew & upgrade buttons if crew sheet is open
+  if (currentSheet === 'crew') {
+    document.querySelectorAll('.crew-assign-btn:not(.active)').forEach(btn => {
+      for (const cm of CREW_MEMBERS) {
+        const cost = getCrewMemberCost(cm);
+        if (!state.crewOwned.includes(cm.id) && btn.textContent.includes(formatMoney(cost))) {
+          btn.disabled = state.cash < cost;
           break;
         }
       }
     });
-  }
-
-  // Update crew buttons if sheet is open
-  if (currentSheet === 'crew') {
-    document.querySelectorAll('.crew-assign-btn:not(.active)').forEach(btn => {
-      const cm = CREW_MEMBERS.find(c => btn.textContent.includes(formatMoney(c.cost)));
-      if (cm && !state.crewOwned.includes(cm.id)) {
-        btn.disabled = state.cash < cm.cost;
+    document.querySelectorAll('.upgrade-buy-btn').forEach(btn => {
+      const costText = btn.textContent.trim();
+      for (const rid in UPGRADES) {
+        for (const u of UPGRADES[rid]) {
+          if (formatMoney(u.cost) === costText && !state.upgradesPurchased.includes(u.id)) {
+            btn.disabled = state.cash < u.cost;
+            return;
+          }
+        }
       }
     });
   }
@@ -1532,20 +1635,6 @@ function runRacket(index) {
   rs.progress = 0;
 }
 
-function hireCrew(index) {
-  const def = RACKETS[index];
-  const rs = state.rackets[index];
-  const cost = getCrewCost(def);
-  if (state.cash < cost || rs.hasCrew) return;
-  state.cash -= cost;
-  rs.hasCrew = true;
-  rs.running = true;
-  rs.progress = 0;
-  rs.crewArrested = false;
-  notify(`Crew assigned to ${def.name}`);
-  renderRackets();
-}
-
 function bailCrew(index) {
   const def = RACKETS[index];
   const rs = state.rackets[index];
@@ -1561,9 +1650,22 @@ function bailCrew(index) {
 
 function buyCrew(crewId) {
   const cm = CREW_MEMBERS.find(c => c.id === crewId);
-  if (!cm || state.crewOwned.includes(crewId) || state.cash < cm.cost) return;
-  state.cash -= cm.cost;
+  const cost = getCrewMemberCost(cm);
+  if (!cm || state.crewOwned.includes(crewId) || state.cash < cost) return;
+  state.cash -= cost;
   state.crewOwned.push(crewId);
+
+  // If this crew member automates a racket, activate it
+  if (cm.automates && cm.racket) {
+    const racketIdx = RACKETS.findIndex(r => r.id === cm.racket);
+    if (racketIdx >= 0) {
+      const rs = state.rackets[racketIdx];
+      rs.hasCrew = true;
+      rs.crewArrested = false;
+      if (!rs.raided && rs.level > 0) { rs.running = true; rs.progress = 0; }
+    }
+  }
+
   notify(`Recruited: ${cm.name}`);
   renderCrewList();
   renderRackets();
@@ -1576,7 +1678,7 @@ function buyUpgrade(upgradeId, racketId) {
   state.cash -= u.cost;
   state.upgradesPurchased.push(upgradeId);
   notify(`Upgrade purchased: ${u.name}`);
-  openUpgrades(racketId);
+  renderCrewList();
   renderRackets();
 }
 
