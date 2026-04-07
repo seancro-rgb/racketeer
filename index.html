@@ -117,6 +117,21 @@
     text-overflow: ellipsis;
   }
 
+  #news-ticker.boost-active {
+    background: rgba(39,174,96,0.1);
+    border-bottom-color: var(--green);
+  }
+
+  #news-ticker.boost-active .news-icon {
+    color: var(--green);
+  }
+
+  #news-ticker.boost-active #news-text {
+    color: var(--green);
+    font-style: normal;
+    font-weight: 600;
+  }
+
   /* ============ HEAT BAR ============ */
   #heat-container {
     position: fixed;
@@ -796,32 +811,6 @@
 
   .welcome-btn:hover { filter: brightness(1.1); }
 
-  /* ============ NOTIFICATIONS ============ */
-  #notifications {
-    position: fixed;
-    top: calc(var(--header-h) + var(--ticker-h) + 8px);
-    left: 10px; right: 10px;
-    z-index: 300;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    pointer-events: none;
-  }
-
-  .notification {
-    background: var(--bg-card);
-    border: 1px solid var(--gold-dim);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 12px;
-    animation: notif-in 0.3s ease-out, notif-out 0.3s ease-in 2.7s forwards;
-    pointer-events: auto;
-  }
-
-  .notification.bad { border-color: var(--red); }
-
-  @keyframes notif-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes notif-out { from { opacity: 1; } to { opacity: 0; } }
 
   /* ============ BRIBE/RAID OVERLAY ============ */
   .bribe-overlay {
@@ -1005,7 +994,6 @@
   <div class="sheet-body" id="upgrades-list"></div>
 </div>
 
-<div id="notifications"></div>
 
 <script>
 // ==================== GAME DATA ====================
@@ -1367,13 +1355,40 @@ function getCurrentRankIndex() {
 
 // ==================== NOTIFICATIONS ====================
 
+let _notifyQueue = [];
+let _notifyTimer = null;
+
 function notify(msg, bad = false) {
-  const container = document.getElementById('notifications');
-  const el = document.createElement('div');
-  el.className = 'notification' + (bad ? ' bad' : '');
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  _notifyQueue.push({ msg, bad, until: 0 });
+  if (!_notifyTimer) showNextNotify();
+}
+
+function showNextNotify() {
+  if (_notifyQueue.length === 0) { _notifyTimer = null; return; }
+  const n = _notifyQueue.shift();
+  const ticker = document.getElementById('news-ticker');
+  const newsIcon = ticker.querySelector('.news-icon');
+  const newsText = document.getElementById('news-text');
+  ticker.classList.remove('boost-active');
+  ticker.style.borderBottomColor = n.bad ? 'var(--red)' : 'var(--gold)';
+  ticker.style.background = n.bad ? 'rgba(192,57,43,0.12)' : 'rgba(212,165,74,0.08)';
+  newsIcon.textContent = n.bad ? 'Alert' : 'News';
+  newsIcon.style.color = n.bad ? 'var(--red)' : 'var(--gold)';
+  newsText.textContent = n.msg;
+  newsText.style.color = n.bad ? 'var(--red)' : 'var(--gold)';
+  newsText.style.fontStyle = 'normal';
+  newsText.style.fontWeight = '600';
+
+  _notifyTimer = setTimeout(() => {
+    // Reset ticker styling
+    ticker.style.borderBottomColor = '';
+    ticker.style.background = '';
+    newsIcon.style.color = '';
+    newsText.style.color = '';
+    newsText.style.fontStyle = '';
+    newsText.style.fontWeight = '';
+    showNextNotify();
+  }, 3000);
 }
 
 // ==================== SHEETS & TABS ====================
@@ -1469,7 +1484,7 @@ function renderRackets() {
       </div>
       <div class="racket-info">
         <div class="racket-name">${def.name}</div>
-        <div class="racket-earnings">${formatMoney(revenue)} / ${formatTime(time)}</div>
+        <div class="racket-earnings" ${Date.now() < state.revenueBoostEnd && state.revenueBoostMult > 1 ? 'style="color:var(--green)"' : ''}>${formatMoney(revenue)}${Date.now() < state.revenueBoostEnd && state.revenueBoostMult > 1 ? ' +' + Math.round((state.revenueBoostMult - 1) * 100) + '%' : ''} / ${formatTime(time)}</div>
         <div class="racket-level">${rs.level > 0 ? 'Lvl ' + rs.level + (rs.hasCrew ? ' \u00b7 Crew' : '') + (rs.raided ? ' \u00b7 RAIDED' : '') : 'Not owned'}</div>
         <div class="racket-progress-outer"><div class="racket-progress-inner" id="prog-${def.id}"></div></div>
       </div>
@@ -1655,7 +1670,10 @@ function updateUI() {
     if (earningsEl) {
       const revenue = rs.level === 0 ? getRevenue(def, 1) : getRevenue(def, rs.level);
       const time = rs.level === 0 ? getTime(def, 1) : getTime(def, rs.level);
-      earningsEl.textContent = formatMoney(revenue) + ' / ' + formatTime(time);
+      const hasBoost = Date.now() < state.revenueBoostEnd && state.revenueBoostMult > 1;
+      const boostPct = hasBoost ? ' +' + Math.round((state.revenueBoostMult - 1) * 100) + '%' : '';
+      earningsEl.textContent = formatMoney(revenue) + boostPct + ' / ' + formatTime(time);
+      earningsEl.style.color = hasBoost ? 'var(--green)' : '';
     }
 
     const upgradeBtn = card.querySelector('.btn-upgrade');
@@ -1693,6 +1711,46 @@ function updateUI() {
         }
       }
     });
+  }
+
+  // Update ticker with active boosts (only when no notification is playing)
+  if (!_notifyTimer) {
+    const ticker = document.getElementById('news-ticker');
+    const newsIcon = ticker.querySelector('.news-icon');
+    const newsText = document.getElementById('news-text');
+    const now = Date.now();
+    const hasRevBoost = now < state.revenueBoostEnd && state.revenueBoostMult > 1;
+    const hasRaidImmunity = now < (state.raidImmunityEnd || 0);
+
+    if (hasRevBoost || hasRaidImmunity) {
+      ticker.classList.add('boost-active');
+      ticker.style.borderBottomColor = '';
+      ticker.style.background = '';
+      newsIcon.textContent = 'Active';
+      newsIcon.style.color = '';
+      newsText.style.color = '';
+      newsText.style.fontStyle = 'normal';
+      newsText.style.fontWeight = '600';
+      const parts = [];
+      if (hasRevBoost) {
+        const secs = Math.ceil((state.revenueBoostEnd - now) / 1000);
+        parts.push('Revenue +' + Math.round((state.revenueBoostMult - 1) * 100) + '% (' + secs + 's)');
+      }
+      if (hasRaidImmunity) {
+        const secs = Math.ceil((state.raidImmunityEnd - now) / 1000);
+        parts.push('Raid immunity (' + secs + 's)');
+      }
+      newsText.textContent = parts.join('  \u00b7  ');
+    } else {
+      ticker.classList.remove('boost-active');
+      ticker.style.borderBottomColor = '';
+      ticker.style.background = '';
+      newsIcon.textContent = 'Headline';
+      newsIcon.style.color = '';
+      newsText.style.color = '';
+      newsText.style.fontStyle = '';
+      newsText.style.fontWeight = '';
+    }
   }
 }
 
@@ -1967,7 +2025,12 @@ function gameLoop(now) {
 // ==================== NEWS ====================
 
 function rotateNews() {
-  document.getElementById('news-text').textContent = NEWS[Math.floor(Math.random() * NEWS.length)];
+  if (_notifyTimer) return;
+  const now = Date.now();
+  const hasBoost = (now < state.revenueBoostEnd && state.revenueBoostMult > 1) || now < (state.raidImmunityEnd || 0);
+  if (!hasBoost) {
+    document.getElementById('news-text').textContent = NEWS[Math.floor(Math.random() * NEWS.length)];
+  }
 }
 setInterval(rotateNews, 12000);
 
