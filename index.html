@@ -968,13 +968,13 @@
   <div class="sheet-header">Go to the Mattresses</div>
   <div class="sheet-body">
     <div id="prestige-info">
-      Reset your empire for <strong>Omert&agrave; Points</strong> that permanently boost all income. Requires Underboss rank.
+      Reset your empire for <strong>Omert&agrave; Points</strong> that permanently boost all income. Requires Capo rank.
     </div>
     <div class="omerta-display-big">
       <div class="pts" id="omerta-display">0</div>
       <div class="mult">Omert&agrave; Points (x<span id="omerta-mult">1.00</span> income)</div>
     </div>
-    <button id="prestige-btn" onclick="prestige()" disabled>Requires Underboss Rank</button>
+    <button id="prestige-btn" onclick="prestige()" disabled>Requires Capo Rank</button>
   </div>
 </div>
 
@@ -1047,23 +1047,19 @@ const NEWS = [
   "The Boss sends his regards.",
 ];
 
-const MILESTONES = [
-  { level: 10,  revenueMultiplier: 2, speedMultiplier: 1 },
-  { level: 25,  revenueMultiplier: 2, speedMultiplier: 1 },
-  { level: 50,  revenueMultiplier: 2, speedMultiplier: 1 },
-  { level: 100, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 150, revenueMultiplier: 2, speedMultiplier: 1 },
-  { level: 200, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 250, revenueMultiplier: 2, speedMultiplier: 1 },
-  { level: 300, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 400, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 500, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 600, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 700, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 800, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 900, revenueMultiplier: 2, speedMultiplier: 2 },
-  { level: 1000, revenueMultiplier: 2, speedMultiplier: 2 },
-];
+// Revenue x2 at 10, 25, then every 25. Speed x2 at 25, 50, then every 50.
+const MILESTONES = (() => {
+  const revLevels = new Set([10, 25]);
+  for (let l = 50; l <= 1000; l += 25) revLevels.add(l);
+  const spdLevels = new Set([25, 50]);
+  for (let l = 100; l <= 1000; l += 50) spdLevels.add(l);
+  const allLevels = [...new Set([...revLevels, ...spdLevels])].sort((a, b) => a - b);
+  return allLevels.map(l => ({
+    level: l,
+    revenueMultiplier: revLevels.has(l) ? 2 : 1,
+    speedMultiplier: spdLevels.has(l) ? 2 : 1,
+  }));
+})();
 
 // Named crew members with unique perks
 // Crew members ordered by racket (matching RACKETS order), then global members at the end
@@ -1343,7 +1339,10 @@ function formatTime(ms) {
 
 function getBribeCost() { return Math.max(100, state.totalEarned * 0.001) * (1 + state.heat / 20); }
 function getOmertaMultiplier() { return 1 + state.omertaPoints * 0.5; }
-function getPrestigeGain() { return Math.floor(Math.sqrt(state.totalEarned / 1e10)); }
+function getPrestigeGain() {
+  const base = Math.floor(Math.sqrt(state.totalEarned / 1e10));
+  return getCurrentRankIndex() >= 3 ? Math.max(1, base) : base;
+}
 
 function getCurrentDPS() {
   let dps = 0;
@@ -1631,9 +1630,9 @@ function updateUI() {
   document.getElementById('omerta-display').textContent = state.omertaPoints;
   document.getElementById('omerta-mult').textContent = getOmertaMultiplier().toFixed(2);
   const pBtn = document.getElementById('prestige-btn');
-  const canPrestige = rankIdx >= 5 && gain > 0;
+  const canPrestige = rankIdx >= 3 && gain > 0;
   pBtn.disabled = !canPrestige;
-  pBtn.textContent = canPrestige ? `Reset for +${gain} Omert\u00e0 Points` : 'Requires Underboss Rank';
+  pBtn.textContent = canPrestige ? `Reset for +${gain} Omert\u00e0 Points` : 'Requires Capo Rank';
 
   document.getElementById('stat-total-earned').textContent = formatMoney(state.lifetimeEarned);
   document.getElementById('stat-rackets-owned').textContent = state.rackets.filter(r => r.level > 0).length;
@@ -1884,7 +1883,7 @@ function setBulk(n) {
 function prestige() {
   const gain = getPrestigeGain();
   const rankIdx = getCurrentRankIndex();
-  if (rankIdx < 5 || gain <= 0) return;
+  if (rankIdx < 3 || gain <= 0) return;
   if (!confirm(`Go to the mattresses? You'll lose all cash and rackets but gain ${gain} Omert\u00e0 Points.`)) return;
   state.omertaPoints += gain;
   state.prestiges++;
