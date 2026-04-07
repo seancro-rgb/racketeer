@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Made Man — Mafia Idle Tycoon</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-dark: #0a0a0f;
+    --bg-card: #14141f;
+    --bg-card-hover: #1a1a2a;
+    --gold: #d4a54a;
+    --gold-dim: #a07830;
+    --red: #c0392b;
+    --red-dim: #922b21;
+    --green: #27ae60;
+    --text: #e8e4dc;
+    --text-dim: #8a8478;
+    --border: #2a2a3a;
+  }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  #header {
+    background: linear-gradient(180deg, #111118 0%, var(--bg-dark) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  #header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  #header-stats {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .header-stat {
+    text-align: right;
+  }
+
+  .header-stat .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .header-stat .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  #rank-display .value {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Heat bar */
+  #heat-container {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #heat-container .heat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--red);
+    font-weight: 700;
+    min-width: 50px;
+  }
+
+  #heat-bar-outer {
+    flex: 1;
+    height: 12px;
+    background: #1a1015;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #2a1520;
+  }
+
+  #heat-bar-inner {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #e67e22, #e74c3c, #c0392b);
+    border-radius: 6px;
+    transition: width 0.3s;
+  }
+
+  #heat-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  #bribe-btn {
+    background: var(--red-dim);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  #bribe-btn:hover { background: var(--red); }
+  #bribe-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Layout */
+  #main {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  #rackets-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #side-panel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Racket cards */
+  .racket-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .racket-card:hover { border-color: var(--gold-dim); }
+
+  .racket-card.locked {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .racket-card.raid {
+    border-color: var(--red) !important;
+    animation: raid-pulse 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes raid-pulse {
+    from { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
+    to { box-shadow: 0 0 20px 4px rgba(192, 57, 43, 0.3); }
+  }
+
+  .racket-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    background: #1a1a2e;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .racket-icon:active {
+    transform: scale(0.9);
+  }
+
+  .racket-icon.clickable:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(212,165,74,0.3);
+  }
+
+  .racket-icon.automated {
+    border-color: var(--green);
+    box-shadow: 0 0 6px rgba(39,174,96,0.2);
+    cursor: default;
+  }
+
+  .racket-icon.disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .racket-milestones {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .milestone {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #1a1a2e;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .milestone.achieved {
+    background: rgba(212,165,74,0.15);
+    color: var(--gold);
+    border-color: var(--gold-dim);
+  }
+
+  .racket-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .racket-name {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+
+  .racket-earnings {
+    font-size: 12px;
+    color: var(--gold-dim);
+  }
+
+  .racket-level {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .racket-progress-outer {
+    height: 6px;
+    background: #1a1a2e;
+    border-radius: 3px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .racket-progress-inner {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.05s linear;
+  }
+
+  .racket-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-upgrade {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-upgrade:hover { background: rgba(212,165,74,0.1); }
+  .btn-upgrade:disabled { opacity: 0.4; cursor: default; }
+
+  .btn-crew {
+    background: transparent;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-crew:hover { background: rgba(39,174,96,0.1); }
+  .btn-crew:disabled { opacity: 0.4; cursor: default; }
+
+  /* Side panel sections */
+  .side-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .side-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Rank progress */
+  #rank-progress-outer {
+    height: 8px;
+    background: #1a1a2e;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  #rank-progress-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  #rank-info {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* Prestige */
+  #prestige-section {
+    border-color: var(--gold-dim);
+  }
+
+  #prestige-info {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  #prestige-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: #0a0a0f;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+
+  #prestige-btn:hover { filter: brightness(1.1); }
+  #prestige-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* News ticker */
+  #news-ticker {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #news-ticker .news-icon {
+    color: var(--gold);
+    font-weight: 700;
+    font-style: normal;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  /* Stats list */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-row .stat-label { color: var(--text-dim); }
+  .stat-row .stat-value { font-weight: 600; }
+
+  /* Save controls */
+  #save-controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  #save-controls button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #save-controls button:hover {
+    border-color: var(--gold-dim);
+    color: var(--text);
+  }
+
+  /* Notifications */
+  #notifications {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .notification {
+    background: var(--bg-card);
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 13px;
+    animation: notif-in 0.3s ease-out, notif-out 0.3s ease-in 2.7s forwards;
+    max-width: 300px;
+  }
+
+  .notification.bad { border-color: var(--red); }
+
+  @keyframes notif-in {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes notif-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Raid overlay */
+  .raid-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(192,57,43,0.15);
+    z-index: 50;
+    pointer-events: none;
+    animation: raid-flash 0.4s ease-in-out 3 alternate;
+  }
+
+  @keyframes raid-flash {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    #main { flex-direction: column; }
+    #side-panel { width: 100%; }
+  }
+
+  /* Bulk buy toggle */
+  #bulk-toggle {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .bulk-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .bulk-btn.active {
+    background: var(--gold-dim);
+    color: #fff;
+    border-color: var(--gold-dim);
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Made Man</h1>
+  <div id="header-stats">
+    <div class="header-stat" id="rank-display">
+      <div class="label">Rank</div>
+      <div class="value" id="rank-name">Street Punk</div>
+    </div>
+    <div class="header-stat">
+      <div class="label">Cash</div>
+      <div class="value" id="cash-display">$0</div>
+    </div>
+    <div class="header-stat">
+      <div class="label">$/sec</div>
+      <div class="value" id="dps-display">$0</div>
+    </div>
+  </div>
+</div>
+
+<div id="heat-container">
+  <span class="heat-label">HEAT</span>
+  <div id="heat-bar-outer"><div id="heat-bar-inner"></div></div>
+  <span id="heat-value">0%</span>
+  <button id="bribe-btn" onclick="bribeCops()">Bribe Cops</button>
+</div>
+
+<div id="main">
+  <div id="rackets-panel">
+    <div id="bulk-toggle">
+      <button class="bulk-btn active" onclick="setBulk(1)">x1</button>
+      <button class="bulk-btn" onclick="setBulk(10)">x10</button>
+      <button class="bulk-btn" onclick="setBulk(25)">x25</button>
+      <button class="bulk-btn" onclick="setBulk(100)">x100</button>
+    </div>
+    <div id="racket-list"></div>
+  </div>
+  <div id="side-panel">
+    <div id="news-ticker">
+      <span class="news-icon">Headline</span>
+      <span id="news-text">A new player emerges on the streets...</span>
+    </div>
+
+    <div class="side-section">
+      <h3>Rank</h3>
+      <div id="current-rank-name" style="font-weight:700;font-size:15px;">Street Punk</div>
+      <div id="rank-progress-outer"><div id="rank-progress-inner"></div></div>
+      <div id="rank-info">Earn $1,000 total to rank up</div>
+    </div>
+
+    <div class="side-section" id="prestige-section">
+      <h3>Go to the Mattresses</h3>
+      <div id="prestige-info">
+        Reset your empire for <strong>Omert&agrave; Points</strong> that permanently boost all income. Requires Don rank.
+      </div>
+      <div style="margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--text-dim);">Current Omert&agrave; Points:</span>
+        <span id="omerta-display" style="font-weight:700;color:var(--gold);"> 0</span>
+        <span style="font-size:12px;color:var(--text-dim);"> (x<span id="omerta-mult">1.00</span> income)</span>
+      </div>
+      <button id="prestige-btn" onclick="prestige()" disabled>Requires Don Rank</button>
+    </div>
+
+    <div class="side-section">
+      <h3>Stats</h3>
+      <div class="stat-row">
+        <span class="stat-label">Total Earned</span>
+        <span class="stat-value" id="stat-total-earned">$0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Rackets Owned</span>
+        <span class="stat-value" id="stat-rackets-owned">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Crew Hired</span>
+        <span class="stat-value" id="stat-crew-hired">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Times Raided</span>
+        <span class="stat-value" id="stat-raids">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Prestiges</span>
+        <span class="stat-value" id="stat-prestiges">0</span>
+      </div>
+    </div>
+
+    <div id="save-controls">
+      <button onclick="saveGame()">Save</button>
+      <button onclick="if(confirm('Reset all progress?')){resetGame()}">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="notifications"></div>
+
+<script>
+// ==================== GAME DATA ====================
+
+const RACKETS = [
+  { id: 'pickpocket',   name: 'Pickpocketing',       icon: '🤏', baseCost: 4,         baseRevenue: 1,          baseTime: 1000,  heatPerRun: 0.1,  unlockCost: 0 },
+  { id: 'numbers',      name: 'Numbers Racket',      icon: '🎲', baseCost: 60,        baseRevenue: 8,          baseTime: 3000,  heatPerRun: 0.3,  unlockCost: 50 },
+  { id: 'protection',   name: 'Protection Racket',   icon: '👊', baseCost: 720,       baseRevenue: 54,         baseTime: 6000,  heatPerRun: 0.6,  unlockCost: 500 },
+  { id: 'bootlegging',  name: 'Bootlegging',         icon: '🥃', baseCost: 8640,      baseRevenue: 432,        baseTime: 12000, heatPerRun: 1.0,  unlockCost: 5000 },
+  { id: 'loansharking', name: 'Loan Sharking',        icon: '💰', baseCost: 103680,    baseRevenue: 3456,       baseTime: 24000, heatPerRun: 1.5,  unlockCost: 50000 },
+  { id: 'chopshop',     name: 'Chop Shop',           icon: '🔧', baseCost: 1244160,   baseRevenue: 27648,      baseTime: 48000, heatPerRun: 2.0,  unlockCost: 500000 },
+  { id: 'casino',       name: 'Underground Casino',  icon: '🎰', baseCost: 14929920,  baseRevenue: 221184,     baseTime: 96000, heatPerRun: 3.0,  unlockCost: 5e6 },
+  { id: 'nightclub',    name: 'Nightclub',           icon: '🍸', baseCost: 179159040, baseRevenue: 1769472,    baseTime: 192000,heatPerRun: 2.5,  unlockCost: 50e6 },
+  { id: 'drugs',        name: 'Drug Operation',      icon: '🧪', baseCost: 2.15e9,    baseRevenue: 14155776,   baseTime: 384000,heatPerRun: 5.0,  unlockCost: 500e6 },
+  { id: 'laundering',   name: 'Money Laundering',    icon: '🧺', baseCost: 2.58e10,   baseRevenue: 113246208,  baseTime: 600000,heatPerRun: -2.0, unlockCost: 5e9 },
+  { id: 'docks',        name: 'The Docks',           icon: '🚢', baseCost: 3.09e11,   baseRevenue: 905969664,  baseTime: 900000,heatPerRun: 4.0,  unlockCost: 50e9 },
+  { id: 'cityhall',     name: 'City Hall',           icon: '🏛️', baseCost: 3.71e12,   baseRevenue: 7247757312, baseTime: 1200000,heatPerRun:-5.0, unlockCost: 500e9 },
+];
+
+const RANKS = [
+  { name: 'Street Punk',  totalEarned: 0 },
+  { name: 'Associate',    totalEarned: 1000 },
+  { name: 'Soldier',      totalEarned: 50000 },
+  { name: 'Capo',         totalEarned: 5e6 },
+  { name: 'Underboss',    totalEarned: 500e6 },
+  { name: 'Don',          totalEarned: 50e9 },
+  { name: 'Godfather',    totalEarned: 5e12 },
+];
+
+const NEWS = [
+  "A new player emerges on the streets...",
+  "Local shopkeeper 'voluntarily' donates to neighborhood fund.",
+  "Police chief seen dining at an upscale Italian restaurant.",
+  "Your cousin Vinny says he knows a guy who knows a guy.",
+  "Suspicious increase in dry cleaning business revenue reported.",
+  "City councilman denies any connection to organized crime.",
+  "Tommy 'Two-Fingers' was last seen heading to the docks.",
+  "The Feds are sniffing around. Keep your nose clean.",
+  "A rival family has been making moves in the east side.",
+  "Your mother says you should call more often.",
+  "Warehouse fire destroys evidence in ongoing investigation.",
+  "New nightclub opening draws suspiciously wealthy clientele.",
+  "An offer was made. It could not be refused.",
+  "Concrete shoes are on sale this season.",
+  "The Don sends his regards.",
+];
+
+// ==================== GAME STATE ====================
+
+let state = getDefaultState();
+
+function getDefaultState() {
+  return {
+    cash: 0,
+    totalEarned: 0,
+    lifetimeEarned: 0,
+    heat: 0,
+    omertaPoints: 0,
+    prestiges: 0,
+    timesRaided: 0,
+    bulkBuy: 1,
+    rackets: RACKETS.map(r => ({
+      id: r.id,
+      level: 0,
+      hasCrew: false,
+      running: false,
+      progress: 0,
+      raided: false,
+    })),
+  };
+}
+
+// ==================== HELPERS ====================
+
+function formatMoney(n) {
+  if (n < 0) return '-' + formatMoney(-n);
+  if (n < 1000) return '$' + Math.floor(n);
+  const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc'];
+  const tier = Math.floor(Math.log10(n) / 3);
+  if (tier >= suffixes.length) return '$' + n.toExponential(2);
+  const divisor = Math.pow(10, tier * 3);
+  const value = n / divisor;
+  return '$' + value.toFixed(value < 10 ? 2 : value < 100 ? 1 : 0) + suffixes[tier];
+}
+
+function getCostForLevel(racketDef, currentLevel) {
+  return racketDef.baseCost * Math.pow(1.15, currentLevel);
+}
+
+function getBulkCost(racketDef, currentLevel, count) {
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    total += getCostForLevel(racketDef, currentLevel + i);
+  }
+  return total;
+}
+
+const MILESTONES = [
+  { level: 25,  revenueMultiplier: 2, speedMultiplier: 1, label: '25: x2' },
+  { level: 50,  revenueMultiplier: 2, speedMultiplier: 1, label: '50: x2' },
+  { level: 100, revenueMultiplier: 2, speedMultiplier: 2, label: '100: x2/s2' },
+  { level: 200, revenueMultiplier: 2, speedMultiplier: 2, label: '200: x2/s2' },
+];
+
+function getMilestoneMultipliers(level) {
+  let revenue = 1;
+  let speed = 1;
+  for (const m of MILESTONES) {
+    if (level >= m.level) {
+      revenue *= m.revenueMultiplier;
+      speed *= m.speedMultiplier;
+    }
+  }
+  return { revenue, speed };
+}
+
+function getRevenue(racketDef, level) {
+  const { revenue: mRev } = getMilestoneMultipliers(level);
+  return racketDef.baseRevenue * level * mRev * getOmertaMultiplier();
+}
+
+function getTime(racketDef, level) {
+  const { speed: mSpd } = getMilestoneMultipliers(level);
+  return racketDef.baseTime * Math.pow(0.995, Math.max(0, level - 1)) / mSpd;
+}
+
+function getCrewCost(racketDef) {
+  return racketDef.baseCost * 10;
+}
+
+function getBribeCost() {
+  return Math.max(100, state.totalEarned * 0.001) * (1 + state.heat / 20);
+}
+
+function getOmertaMultiplier() {
+  return 1 + state.omertaPoints * 0.5;
+}
+
+function getPrestigeGain() {
+  return Math.floor(Math.sqrt(state.totalEarned / 1e10));
+}
+
+function getCurrentRankIndex() {
+  let idx = 0;
+  for (let i = RANKS.length - 1; i >= 0; i--) {
+    if (state.totalEarned >= RANKS[i].totalEarned) { idx = i; break; }
+  }
+  return idx;
+}
+
+// ==================== NOTIFICATIONS ====================
+
+function notify(msg, bad = false) {
+  const container = document.getElementById('notifications');
+  const el = document.createElement('div');
+  el.className = 'notification' + (bad ? ' bad' : '');
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ==================== RENDERING ====================
+
+function renderRackets() {
+  const list = document.getElementById('racket-list');
+  list.innerHTML = '';
+
+  RACKETS.forEach((def, i) => {
+    const rs = state.rackets[i];
+    const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
+    const isFreeFirst = (i === 0 && rs.level === 0);
+    const bulkCost = isFreeFirst
+      ? 0
+      : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, state.bulkBuy));
+    const revenue = rs.level === 0
+      ? getRevenue(def, 1)
+      : getRevenue(def, rs.level);
+    const crewCost = getCrewCost(def);
+
+    const iconClass = rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable';
+    const milestoneHtml = MILESTONES.map(m =>
+      `<span class="milestone${rs.level >= m.level ? ' achieved' : ''}">${m.label}</span>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'racket-card' + (!unlocked ? ' locked' : '') + (rs.raided ? ' raid' : '');
+    card.innerHTML = `
+      <div class="racket-icon ${iconClass}" onclick="runRacket(${i})">${def.icon}</div>
+      <div class="racket-info">
+        <div class="racket-name">${def.name}</div>
+        <div class="racket-earnings">${rs.level > 0 ? formatMoney(revenue) + ' / run' : 'Earns ' + formatMoney(revenue) + ' / run'}</div>
+        <div class="racket-level">${rs.level > 0 ? 'Level ' + rs.level + (rs.hasCrew ? ' · Crew Active' : '') + (rs.raided ? ' · RAIDED' : '') : 'Not owned'}</div>
+        <div class="racket-milestones">${milestoneHtml}</div>
+        <div class="racket-progress-outer"><div class="racket-progress-inner" id="prog-${def.id}"></div></div>
+      </div>
+      <div class="racket-actions">
+        <button class="btn-upgrade" onclick="buyRacket(${i})"
+          ${(state.cash < bulkCost && !isFreeFirst) || !unlocked ? 'disabled' : ''}>
+          ${isFreeFirst ? 'Start Free' : (rs.level === 0 ? 'Buy' : 'x' + state.bulkBuy) + ' · ' + formatMoney(bulkCost)}
+        </button>
+        ${rs.level > 0 && !rs.hasCrew ? `
+          <button class="btn-crew" onclick="hireCrew(${i})"
+            ${state.cash < crewCost ? 'disabled' : ''}>
+            Crew · ${formatMoney(crewCost)}
+          </button>
+        ` : ''}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function updateUI() {
+  document.getElementById('cash-display').textContent = formatMoney(state.cash);
+
+  // Calculate DPS
+  let dps = 0;
+  RACKETS.forEach((def, i) => {
+    const rs = state.rackets[i];
+    if (rs.level > 0 && rs.hasCrew && !rs.raided) {
+      const rev = getRevenue(def, rs.level);
+      const time = getTime(def, rs.level);
+      dps += rev / (time / 1000);
+    }
+  });
+  document.getElementById('dps-display').textContent = formatMoney(dps);
+
+  // Heat
+  const heatPct = Math.min(100, Math.max(0, state.heat));
+  document.getElementById('heat-bar-inner').style.width = heatPct + '%';
+  document.getElementById('heat-value').textContent = Math.floor(heatPct) + '%';
+
+  const bribeCost = getBribeCost();
+  const brideBtn = document.getElementById('bribe-btn');
+  brideBtn.textContent = `Bribe · ${formatMoney(bribeCost)}`;
+  brideBtn.disabled = state.cash < bribeCost || state.heat <= 0;
+
+  // Rank
+  const rankIdx = getCurrentRankIndex();
+  const rank = RANKS[rankIdx];
+  const nextRank = RANKS[rankIdx + 1];
+  document.getElementById('rank-name').textContent = rank.name;
+  document.getElementById('current-rank-name').textContent = rank.name;
+
+  if (nextRank) {
+    const progress = (state.totalEarned - rank.totalEarned) / (nextRank.totalEarned - rank.totalEarned);
+    document.getElementById('rank-progress-inner').style.width = Math.min(100, progress * 100) + '%';
+    document.getElementById('rank-info').textContent = `Earn ${formatMoney(nextRank.totalEarned)} total to become ${nextRank.name}`;
+  } else {
+    document.getElementById('rank-progress-inner').style.width = '100%';
+    document.getElementById('rank-info').textContent = 'Maximum rank achieved';
+  }
+
+  // Prestige
+  const gain = getPrestigeGain();
+  document.getElementById('omerta-display').textContent = state.omertaPoints;
+  document.getElementById('omerta-mult').textContent = getOmertaMultiplier().toFixed(2);
+  const pBtn = document.getElementById('prestige-btn');
+  const canPrestige = rankIdx >= 5 && gain > 0; // Requires Don
+  pBtn.disabled = !canPrestige;
+  pBtn.textContent = canPrestige ? `Reset for +${gain} Omertà Points` : 'Requires Don Rank';
+
+  // Stats
+  document.getElementById('stat-total-earned').textContent = formatMoney(state.lifetimeEarned);
+  document.getElementById('stat-rackets-owned').textContent = state.rackets.filter(r => r.level > 0).length;
+  document.getElementById('stat-crew-hired').textContent = state.rackets.filter(r => r.hasCrew).length;
+  document.getElementById('stat-raids').textContent = state.timesRaided;
+  document.getElementById('stat-prestiges').textContent = state.prestiges;
+
+  // Update button states
+  RACKETS.forEach((def, i) => {
+    const rs = state.rackets[i];
+    const unlocked = state.totalEarned >= def.unlockCost || rs.level > 0;
+    const isFreeFirst = (i === 0 && rs.level === 0);
+    const bulkCost = isFreeFirst ? 0 : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, state.bulkBuy));
+
+    const card = document.querySelectorAll('.racket-card')[i];
+    if (!card) return;
+    card.classList.toggle('locked', !unlocked);
+    card.classList.toggle('raid', rs.raided);
+
+    const icon = card.querySelector('.racket-icon');
+    if (icon) {
+      icon.className = 'racket-icon ' + (rs.level === 0 || rs.raided ? 'disabled' : rs.hasCrew ? 'automated' : 'clickable');
+    }
+
+    const upgradeBtn = card.querySelector('.btn-upgrade');
+    if (upgradeBtn) {
+      upgradeBtn.disabled = (state.cash < bulkCost && !isFreeFirst) || !unlocked;
+      upgradeBtn.textContent = isFreeFirst ? 'Start Free' : `${rs.level === 0 ? 'Buy' : 'x' + state.bulkBuy} · ${formatMoney(bulkCost)}`;
+    }
+
+    const crewBtn = card.querySelector('.btn-crew');
+    if (crewBtn) {
+      const crewCost = getCrewCost(def);
+      crewBtn.disabled = state.cash < crewCost;
+      crewBtn.textContent = `Crew · ${formatMoney(crewCost)}`;
+    }
+
+    // Update milestones
+    const milestones = card.querySelectorAll('.milestone');
+    MILESTONES.forEach((m, mi) => {
+      if (milestones[mi]) milestones[mi].classList.toggle('achieved', rs.level >= m.level);
+    });
+  });
+}
+
+// ==================== GAME ACTIONS ====================
+
+function buyRacket(index) {
+  const def = RACKETS[index];
+  const rs = state.rackets[index];
+  const count = rs.level === 0 ? 1 : state.bulkBuy;
+  const isFreeFirst = (index === 0 && rs.level === 0);
+  const cost = isFreeFirst ? 0 : (rs.level === 0 ? getCostForLevel(def, 0) : getBulkCost(def, rs.level, count));
+
+  if (state.cash < cost) return;
+  state.cash -= cost;
+  rs.level += count;
+
+  if (count === 1 && rs.level === 1) {
+    notify(`Acquired: ${def.name}`);
+  }
+  renderRackets();
+}
+
+function runRacket(index) {
+  const rs = state.rackets[index];
+  if (rs.level === 0 || rs.running || rs.raided) return;
+  rs.running = true;
+  rs.progress = 0;
+}
+
+function hireCrew(index) {
+  const def = RACKETS[index];
+  const rs = state.rackets[index];
+  const cost = getCrewCost(def);
+  if (state.cash < cost || rs.hasCrew) return;
+  state.cash -= cost;
+  rs.hasCrew = true;
+  rs.running = true;
+  rs.progress = 0;
+  notify(`Crew assigned to ${def.name}`);
+  renderRackets();
+}
+
+function bribeCops() {
+  const cost = getBribeCost();
+  if (state.cash < cost || state.heat <= 0) return;
+  state.cash -= cost;
+  state.heat = Math.max(0, state.heat - 25);
+  notify('Cops looked the other way...');
+}
+
+function setBulk(n) {
+  state.bulkBuy = n;
+  document.querySelectorAll('.bulk-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === 'x' + n);
+  });
+  renderRackets();
+}
+
+function prestige() {
+  const gain = getPrestigeGain();
+  const rankIdx = getCurrentRankIndex();
+  if (rankIdx < 5 || gain <= 0) return;
+  if (!confirm(`Go to the mattresses? You'll lose all cash and rackets but gain ${gain} Omertà Points.`)) return;
+
+  state.omertaPoints += gain;
+  state.prestiges++;
+  const saved = { omertaPoints: state.omertaPoints, prestiges: state.prestiges, lifetimeEarned: state.lifetimeEarned, timesRaided: state.timesRaided };
+  Object.assign(state, getDefaultState());
+  Object.assign(state, saved);
+
+  notify(`Reborn with ${state.omertaPoints} Omertà Points (x${getOmertaMultiplier().toFixed(2)} income)`);
+  renderRackets();
+}
+
+// ==================== RAID SYSTEM ====================
+
+function triggerRaid() {
+  // Pick a random active racket to raid
+  const active = state.rackets
+    .map((rs, i) => ({ rs, i }))
+    .filter(({ rs }) => rs.level > 0 && !rs.raided);
+
+  if (active.length === 0) return;
+
+  const target = active[Math.floor(Math.random() * active.length)];
+  target.rs.raided = true;
+  target.rs.running = false;
+  target.rs.progress = 0;
+  state.timesRaided++;
+
+  // Raid flash
+  const overlay = document.createElement('div');
+  overlay.className = 'raid-overlay';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 2000);
+
+  notify(`RAID! ${RACKETS[target.i].name} shut down!`, true);
+
+  // Raid clears after some time
+  setTimeout(() => {
+    target.rs.raided = false;
+    state.heat = Math.max(0, state.heat - 15);
+    notify(`${RACKETS[target.i].name} is back in operation.`);
+    if (target.rs.hasCrew) {
+      target.rs.running = true;
+      target.rs.progress = 0;
+    }
+  }, 8000 + Math.random() * 7000);
+}
+
+// ==================== GAME LOOP ====================
+
+let lastTick = performance.now();
+
+function gameLoop(now) {
+  const dt = now - lastTick;
+  lastTick = now;
+
+  // Update racket progress
+  RACKETS.forEach((def, i) => {
+    const rs = state.rackets[i];
+    if (!rs.running || rs.level === 0 || rs.raided) return;
+
+    const totalTime = getTime(def, rs.level);
+    rs.progress += dt;
+
+    if (rs.progress >= totalTime) {
+      // Complete the run
+      const revenue = getRevenue(def, rs.level);
+      state.cash += revenue;
+      state.totalEarned += revenue;
+      state.lifetimeEarned += revenue;
+
+      // Heat
+      state.heat = Math.min(100, state.heat + def.heatPerRun);
+
+      if (rs.hasCrew) {
+        rs.progress = rs.progress - totalTime; // carry over
+      } else {
+        rs.running = false;
+        rs.progress = 0;
+      }
+    }
+
+    // Update progress bar
+    const progBar = document.getElementById('prog-' + def.id);
+    if (progBar) {
+      const pct = Math.min(100, (rs.progress / getTime(def, rs.level)) * 100);
+      progBar.style.width = pct + '%';
+    }
+  });
+
+  // Natural heat decay
+  if (state.heat > 0) {
+    state.heat = Math.max(0, state.heat - 0.02 * (dt / 1000));
+  }
+
+  // Random raid check
+  if (state.heat > 50 && Math.random() < (state.heat / 100) * 0.0005 * (dt / 16)) {
+    triggerRaid();
+  }
+
+  updateUI();
+  requestAnimationFrame(gameLoop);
+}
+
+// ==================== NEWS TICKER ====================
+
+function rotateNews() {
+  const el = document.getElementById('news-text');
+  el.textContent = NEWS[Math.floor(Math.random() * NEWS.length)];
+}
+setInterval(rotateNews, 12000);
+
+// ==================== SAVE / LOAD ====================
+
+function saveGame() {
+  localStorage.setItem('mademan_save', JSON.stringify(state));
+  notify('Game saved.');
+}
+
+function loadGame() {
+  const data = localStorage.getItem('mademan_save');
+  if (!data) return false;
+  try {
+    const loaded = JSON.parse(data);
+    // Merge with defaults to handle new fields
+    const def = getDefaultState();
+    Object.assign(def, loaded);
+    // Ensure racket array is correct length
+    while (def.rackets.length < RACKETS.length) {
+      def.rackets.push({ id: RACKETS[def.rackets.length].id, level: 0, hasCrew: false, running: false, progress: 0, raided: false });
+    }
+    state = def;
+
+    // Restart automated rackets
+    state.rackets.forEach(rs => {
+      if (rs.hasCrew && rs.level > 0 && !rs.raided) {
+        rs.running = true;
+      }
+      rs.raided = false; // clear raids on load
+    });
+
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function resetGame() {
+  localStorage.removeItem('mademan_save');
+  state = getDefaultState();
+  renderRackets();
+  notify('All progress reset.');
+}
+
+// Auto-save every 30s
+setInterval(saveGame, 30000);
+
+// ==================== INIT ====================
+
+loadGame();
+renderRackets();
+requestAnimationFrame(gameLoop);
+</script>
+
+</body>
+</html>
