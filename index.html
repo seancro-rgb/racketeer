@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>MobbedUp</title>
+<title>Racketeer</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -892,7 +892,7 @@
 <body>
 
 <div id="header">
-  <h1>MobbedUp</h1>
+  <h1>Racketeer</h1>
   <div id="header-stats">
     <div class="header-stat">
       <div class="label">Cash</div>
@@ -1995,7 +1995,7 @@ function gameLoop(now) {
       state.cash += revenue;
       state.totalEarned += revenue;
       state.lifetimeEarned += revenue;
-      state.heat = Math.min(100, state.heat + getHeatPerRun(def));
+      if (Date.now() > (state.raidImmunityEnd || 0)) state.heat = Math.min(100, state.heat + getHeatPerRun(def));
 
       if (rs.hasCrew) { rs.progress -= totalTime; }
       else { rs.running = false; rs.progress = 0; }
@@ -2008,7 +2008,7 @@ function gameLoop(now) {
     }
   });
 
-  if (state.heat > 0) state.heat = Math.max(0, state.heat - 0.02 * (dt / 1000));
+  if (state.heat > 0 && Date.now() > (state.raidImmunityEnd || 0)) state.heat = Math.max(0, state.heat - 0.02 * (dt / 1000));
   if (state.heat > 50 && Date.now() > (state.raidImmunityEnd || 0) && Math.random() < (state.heat / 100) * 0.0005 * (dt / 16)) triggerRaid();
 
   // Random events every 90-180 seconds
