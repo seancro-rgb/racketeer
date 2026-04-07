@@ -2,7 +2,7 @@
   "name": "Racketeer",
   "short_name": "Racketeer",
   "description": "Rise from street punk to crime boss in this idle tycoon game",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0f",
